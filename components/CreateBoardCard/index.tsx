@@ -40,7 +40,7 @@ export default function CreateBoardCard(): JSX.Element {
         sections: sectionTitles.map((title) => ({ title })),
       });
 
-      await router.push(`/board/${docRef.id}`);
+      await router.push(`/board?id=${docRef.id}`);
     });
   };
 
