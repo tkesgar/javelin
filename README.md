@@ -44,6 +44,10 @@ obtained from the project settings page.
 }
 ```
 
+> Alternatively, put the JSON string as environment variables. This is intended
+> for environments such as Netlify, where it is more convenient to provide an
+> environment variable.
+
 ### Development
 
 Start Next.js development server:

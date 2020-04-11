@@ -4,7 +4,10 @@ const childProcess = require("child_process");
 const withSharo = require("@tkesgar/sharo-next");
 
 function getFirebaseConfigJSON() {
-  const json = fs.readFileSync("./firebase.config.json");
+  const json =
+    process.env.FIREBASE_CONFIG ||
+    fs.readFileSync("./firebase.config.json").toString();
+
   const config = JSON.parse(json);
 
   return JSON.stringify(config);
