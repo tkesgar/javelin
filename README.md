@@ -56,21 +56,6 @@ Start Next.js development server:
 npm run dev
 ```
 
-Run Jest tests:
-
-```bash
-npm test                # Run tests
-npm test -- --watch     # Run only changed tests
-npm test -- --coverage  # Run test with code coverage
-```
-
-Start Cypress testing server:
-
-```bash
-npm run cypress -- start  # Run interactive GUI
-npm run cypress -- run    # Run Cypress tests
-```
-
 ### Deployment
 
 Build and export the page files:
