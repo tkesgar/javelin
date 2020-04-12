@@ -71,6 +71,7 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
                 id={card.id}
                 boardId={board.id}
                 content={card.content}
+                voteCount={card.voteCount}
                 className="mb-2"
                 draggable
                 onDragStart={createHandleDragStartCard(card)}

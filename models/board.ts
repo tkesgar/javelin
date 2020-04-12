@@ -13,6 +13,7 @@ export interface CardData {
   id: string;
   sectionIndex: number;
   content: string;
+  voteCount: number;
 }
 
 interface CreateBoardOpts {
@@ -104,6 +105,23 @@ export async function deleteCard(
     .collection("cards")
     .doc(cardId)
     .delete();
+}
+
+export async function incrementVoteCard(
+  boardId: string,
+  cardId: string,
+  value = 1
+): Promise<void> {
+  const db = firebase.firestore();
+
+  await db
+    .collection("boards")
+    .doc(boardId)
+    .collection("cards")
+    .doc(cardId)
+    .update({
+      voteCount: firebase.firestore.FieldValue.increment(value),
+    });
 }
 
 export function useBoard(boardId: string): BoardData {
