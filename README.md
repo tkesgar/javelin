@@ -50,9 +50,9 @@ obtained from the project settings page.
 }
 ```
 
-> Alternatively, put the JSON string as environment variables. This is intended
-> for environments such as Netlify, where it is more convenient to provide an
-> environment variable.
+> Alternatively, put the JSON string as `FIREBASE_CONFIG` environment variable.
+> This is intended for environments such as Netlify, where it is more convenient
+> to provide an environment variable.
 
 ### Development
 
@@ -71,7 +71,7 @@ npm run build
 npm run export
 ```
 
-The compiled files is available in `out` directory, which should be served using
+The compiled files are available in `out` directory, which should be served using
 a HTTP server.
 
 ## Contributing
