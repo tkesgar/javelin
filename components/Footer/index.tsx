@@ -8,8 +8,7 @@ export default function CreateBoardPage(): JSX.Element {
   return (
     <footer className="text-center text-muted">
       <a href="https://github.com/tkesgar/javelin">javelin</a>(
-      <a href={commitURL}>{commitId}</a>) is created with ♥ by{" "}
-      <a href="https://tkesgar.com">Ted Kesgar</a>
+      <a href={commitURL}>{commitId}</a>)
     </footer>
   );
 }
