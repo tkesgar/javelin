@@ -36,6 +36,12 @@ export async function createBoard(opts: CreateBoardOpts): Promise<string> {
   return docRef.id;
 }
 
+export async function removeBoard(id: string): Promise<void> {
+  const db = firebase.firestore();
+
+  await db.collection("boards").doc(id).delete();
+}
+
 interface CreateCardOpts {
   content?: string;
 }

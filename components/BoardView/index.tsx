@@ -5,12 +5,14 @@ import { acall } from "../../utils";
 import { MouseEventHandler, DragEventHandler } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
 import BoardCard from "../BoardCard";
+import { useRouter } from "next/router";
 
 interface BoardViewProps {
   board: BoardModel.BoardData;
 }
 
 export default function BoardView({ board }: BoardViewProps): JSX.Element {
+  const router = useRouter();
   const cards = BoardModel.useBoardCards(board.id);
 
   function createHandleAddCardClick(sectionIndex: number): MouseEventHandler {
@@ -41,44 +43,76 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
     }
   };
 
+  const handleClickDeleteBoard: MouseEventHandler = (): void => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this board? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    acall(async () => {
+      const boardTitle = board.title;
+
+      await router.push("/");
+      await BoardModel.removeBoard(board.id);
+
+      alert(`Board ${boardTitle} deleted.`);
+    });
+  };
+
   return (
-    <Row>
-      {board.sections.map((section, sectionIndex) => (
-        <Col
-          className="mb-4 mb-lg-0"
-          lg={12 / board.sections.length}
-          key={sectionIndex}
-          onDragOver={handleDragOverSection}
-          onDrop={createHandleDropSection(sectionIndex)}
-        >
-          <h2 className="h4 text-center mb-3">{section.title}</h2>
-          <Button
-            block
-            type="button"
-            className="mb-3"
-            size="sm"
-            onClick={createHandleAddCardClick(sectionIndex)}
+    <>
+      <Row className="mb-5">
+        {board.sections.map((section, sectionIndex) => (
+          <Col
+            className="mb-4 mb-lg-0"
+            lg={12 / board.sections.length}
+            key={sectionIndex}
+            onDragOver={handleDragOverSection}
+            onDrop={createHandleDropSection(sectionIndex)}
           >
-            <span style={{ position: "relative", top: "-1px" }}>
-              <Octicon icon={Plus} verticalAlign="middle" ariaLabel="Add" />
-            </span>
+            <h2 className="h4 text-center mb-3">{section.title}</h2>
+            <Button
+              block
+              type="button"
+              className="mb-3"
+              size="sm"
+              onClick={createHandleAddCardClick(sectionIndex)}
+            >
+              <span style={{ position: "relative", top: "-1px" }}>
+                <Octicon icon={Plus} verticalAlign="middle" ariaLabel="Add" />
+              </span>
+            </Button>
+            {cards
+              .filter((card) => card.sectionIndex === sectionIndex)
+              .map((card) => (
+                <BoardCard
+                  key={card.id}
+                  id={card.id}
+                  boardId={board.id}
+                  content={card.content}
+                  voteCount={card.voteCount}
+                  className="mb-2"
+                  draggable
+                  onDragStart={createHandleDragStartCard(card)}
+                />
+              ))}
+          </Col>
+        ))}
+      </Row>
+      <div className="text-center">
+        {cards.length > 0 ? (
+          <div className="text-muted">
+            To delete this board, you need to remove all cards first.
+          </div>
+        ) : (
+          <Button type="button" variant="link" onClick={handleClickDeleteBoard}>
+            Delete board
           </Button>
-          {cards
-            .filter((card) => card.sectionIndex === sectionIndex)
-            .map((card) => (
-              <BoardCard
-                key={card.id}
-                id={card.id}
-                boardId={board.id}
-                content={card.content}
-                voteCount={card.voteCount}
-                className="mb-2"
-                draggable
-                onDragStart={createHandleDragStartCard(card)}
-              />
-            ))}
-        </Col>
-      ))}
-    </Row>
+        )}
+      </div>
+    </>
   );
 }
