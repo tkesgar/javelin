@@ -1,11 +1,9 @@
 import * as React from "react";
-import * as firebase from "firebase/app";
 import { Form, Button, Card } from "react-bootstrap";
-import { acall, range } from "../../utils";
 import { useRouter } from "next/router";
-
-type OnSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => void;
-type OnChangeHandler = (event: React.FormEvent<HTMLInputElement>) => void;
+import { acall, range, getInputValue } from "../../utils";
+import { createBoard } from "../../models/board";
+import { OnSubmitHandler, OnChangeHandler } from "../../utils/handler-types";
 
 const DEFAULT_SECTIONS_COUNT = 3;
 
@@ -18,35 +16,25 @@ export default function CreateBoardCard(): JSX.Element {
   const handleSubmit: OnSubmitHandler = (event) => {
     event.preventDefault();
 
-    const inputTitle = document.querySelector(
-      "#createBoardTitle"
-    ) as HTMLInputElement;
-    const title = inputTitle.value;
-
-    const sectionTitles = range(1, sectionsCount).map((i) => {
-      const inputSectionTitle = document.querySelector(
-        `#createBoardSectionTitle${i}`
-      ) as HTMLInputElement;
-      const sectionTitle = inputSectionTitle.value;
-
-      return sectionTitle;
-    });
+    const title = getInputValue("#createBoardTitle");
+    const sections = range(1, sectionsCount).map((i) => ({
+      title: getInputValue(`#createBoardSectionTitle${i}`),
+    }));
 
     acall(async () => {
-      const db = firebase.firestore();
-
-      const docRef = await db.collection("boards").add({
+      const board = await createBoard({
         title,
-        sections: sectionTitles.map((title) => ({ title })),
+        sections: sections,
       });
 
-      await router.push(`/board?id=${docRef.id}`);
+      await router.push(`/board?id=${board.id}`);
     });
   };
 
   const handleChangeSectionsCount: OnChangeHandler = (event) => {
-    const value = Number((event.target as HTMLInputElement).value);
-    setSectionsCount(value);
+    const input = event.target as HTMLInputElement;
+
+    setSectionsCount(Number(input.value));
   };
 
   return (
@@ -73,7 +61,7 @@ export default function CreateBoardCard(): JSX.Element {
               min="1"
               max="4"
               onChange={handleChangeSectionsCount}
-              className="w-25"
+              style={{ width: "5rem" }}
             />
           </Form.Group>
           <div className="mb-4">

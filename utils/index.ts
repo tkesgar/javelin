@@ -30,3 +30,8 @@ export function range(start: number, stop: number, step = 1): number[] {
 
   return arr;
 }
+
+export function getInputValue(selector: string): string {
+  const input = document.querySelector(selector) as HTMLInputElement;
+  return input.value;
+}
