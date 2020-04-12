@@ -54,31 +54,28 @@ export default function CreateBoardCard(): JSX.Element {
       <Card.Body>
         <Card.Title className="mb-4 text-center">Create a new board</Card.Title>
         <Form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Form.Group controlId="createBoardTitle">
-              <Form.Label>Board title</Form.Label>
-              <Form.Control
-                required
-                type="text"
-                placeholder="Board title"
-                maxLength={40}
-              />
-            </Form.Group>
-          </div>
-          <div className="mb-4">
-            <Form.Group controlId="createBoardSectionsCount">
-              <Form.Label>Number of sections</Form.Label>
-              <Form.Control
-                required
-                type="number"
-                placeholder="Number of sections"
-                defaultValue={DEFAULT_SECTIONS_COUNT}
-                min="1"
-                max="4"
-                onChange={handleChangeSectionsCount}
-              />
-            </Form.Group>
-          </div>
+          <Form.Group controlId="createBoardTitle">
+            <Form.Label>Board title</Form.Label>
+            <Form.Control
+              required
+              type="text"
+              placeholder="Board title"
+              maxLength={40}
+            />
+          </Form.Group>
+          <Form.Group controlId="createBoardSectionsCount">
+            <Form.Label>Number of sections</Form.Label>
+            <Form.Control
+              required
+              type="number"
+              placeholder="Number of sections"
+              defaultValue={DEFAULT_SECTIONS_COUNT}
+              min="1"
+              max="4"
+              onChange={handleChangeSectionsCount}
+              className="w-25"
+            />
+          </Form.Group>
           <div className="mb-4">
             {range(1, sectionsCount).map((i) => (
               <Form.Group key={i} controlId={`createBoardSectionTitle${i}`}>
@@ -92,8 +89,8 @@ export default function CreateBoardCard(): JSX.Element {
               </Form.Group>
             ))}
           </div>
-          <Button block variant="primary" type="submit">
-            Create new board
+          <Button block size="lg" variant="primary" type="submit">
+            Create
           </Button>
         </Form>
       </Card.Body>
