@@ -46,8 +46,8 @@ export default function BoardPage({ boardId }: BoardPageProps): JSX.Element {
         <Row>
           {boardData.sections.map((section, i) => (
             <Col
-              className="mb-4 mb-md-0"
-              md={12 / boardData.sections.length}
+              className="mb-4 mb-lg-0"
+              lg={12 / boardData.sections.length}
               key={i}
               onDragOver={(event: React.DragEvent<HTMLDivElement>): void => {
                 event.preventDefault();
