@@ -35,3 +35,15 @@ export function getInputValue(selector: string): string {
   const input = document.querySelector(selector) as HTMLInputElement;
   return input.value;
 }
+
+export function clamp(value: number, min = 0, max = 1): number {
+  if (value < min) {
+    return min;
+  }
+
+  if (value > max) {
+    return max;
+  }
+
+  return value;
+}

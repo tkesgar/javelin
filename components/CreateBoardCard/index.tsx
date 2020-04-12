@@ -1,10 +1,12 @@
 import * as React from "react";
 import { Form, Button, Card } from "react-bootstrap";
 import { useRouter } from "next/router";
-import { acall, range, getInputValue } from "../../utils";
+import { acall, range, getInputValue, clamp } from "../../utils";
 import { createBoard } from "../../models/board";
 import { OnSubmitHandler, OnChangeHandler } from "../../utils/handler-types";
 
+const MIN_SECTIONS_COUNT = 1;
+const MAX_SECTIONS_COUNT = 4;
 const DEFAULT_SECTIONS_COUNT = 3;
 
 export default function CreateBoardCard(): JSX.Element {
@@ -33,8 +35,14 @@ export default function CreateBoardCard(): JSX.Element {
 
   const handleChangeSectionsCount: OnChangeHandler = (event) => {
     const input = event.target as HTMLInputElement;
+    const value = clamp(
+      Number(input.value),
+      MIN_SECTIONS_COUNT,
+      MAX_SECTIONS_COUNT
+    );
 
-    setSectionsCount(Number(input.value));
+    setSectionsCount(value);
+    input.value = String(value);
   };
 
   return (
@@ -58,8 +66,8 @@ export default function CreateBoardCard(): JSX.Element {
               type="number"
               placeholder="Number of sections"
               defaultValue={DEFAULT_SECTIONS_COUNT}
-              min="1"
-              max="4"
+              min={MIN_SECTIONS_COUNT}
+              max={MAX_SECTIONS_COUNT}
               onChange={handleChangeSectionsCount}
               style={{ width: "5rem" }}
             />
