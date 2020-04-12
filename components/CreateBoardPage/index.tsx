@@ -13,7 +13,7 @@ export default function CreateBoardPage(): JSX.Element {
         <CreateBoardCard />
         <footer className="text-center text-muted pt-3">
           <a href="https://github.com/tkesgar/javelin">javelin</a>(
-          <a href={commitURL}>{commitId}</a>) is created with ♥ by
+          <a href={commitURL}>{commitId}</a>) is created with ♥ by{" "}
           <a href="https://tkesgar.com">Ted Kesgar</a>
         </footer>
       </div>
