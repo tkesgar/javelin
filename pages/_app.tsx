@@ -21,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps): JSX.Element {
         />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Comic+Neue&family=Inconsolata&family=Inter:wght@300;400;700&display=swap"
         />
       </Head>
       <Component {...pageProps} />

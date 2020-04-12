@@ -1,12 +1,14 @@
 import * as React from "react";
-import { Button, Card } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import Octicon, { X, Thumbsup } from "@primer/octicons-react";
+import classNames from "classnames";
 import {
   InputEventHandler,
   MouseEventHandler,
 } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
 import { acall } from "../../utils";
+import styles from "./styles.module.scss";
 
 interface BoardCardProps {
   id: string;
@@ -45,29 +47,33 @@ export default function BoardCard({
   };
 
   return (
-    <Card {...restProps}>
-      <Card.Body>
-        <div contentEditable ref={divRef} onInput={handleInputContent} />
-      </Card.Body>
-      <Card.Footer>
-        <div className="d-flex justify-content-between">
-          <Button variant="success" size="sm" onClick={handleClickVoteUp}>
-            <div className="d-inline-block mr-2">{voteCount}</div>
-            <span style={{ position: "relative", top: "-1px" }}>
-              <Octicon
-                icon={Thumbsup}
-                ariaLabel="Vote up"
-                verticalAlign="middle"
-              />
-            </span>
-          </Button>
-          <Button variant="danger" size="sm" onClick={handleClickDelete}>
-            <span style={{ position: "relative", top: "-1px" }}>
-              <Octicon icon={X} ariaLabel="Delete" verticalAlign="middle" />
-            </span>
-          </Button>
-        </div>
-      </Card.Footer>
-    </Card>
+    <div
+      {...restProps}
+      className={classNames(styles.Card, "p-3", restProps.className)}
+    >
+      <div
+        contentEditable
+        ref={divRef}
+        onInput={handleInputContent}
+        className="mb-2"
+      />
+      <div className="d-flex justify-content-between">
+        <Button variant="success" size="sm" onClick={handleClickVoteUp}>
+          <div className="d-inline-block mr-2">{voteCount}</div>
+          <span style={{ position: "relative", top: "-1px" }}>
+            <Octicon
+              icon={Thumbsup}
+              ariaLabel="Vote up"
+              verticalAlign="middle"
+            />
+          </span>
+        </Button>
+        <Button variant="danger" size="sm" onClick={handleClickDelete}>
+          <span style={{ position: "relative", top: "-1px" }}>
+            <Octicon icon={X} ariaLabel="Delete" verticalAlign="middle" />
+          </span>
+        </Button>
+      </div>
+    </div>
   );
 }
