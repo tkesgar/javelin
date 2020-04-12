@@ -59,7 +59,7 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
             size="sm"
             onClick={createHandleAddCardClick(sectionIndex)}
           >
-            <span style={{ position: "relative", top: "-2px" }}>
+            <span style={{ position: "relative", top: "-1px" }}>
               <Octicon icon={Plus} verticalAlign="middle" ariaLabel="Add" />
             </span>
           </Button>
