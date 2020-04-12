@@ -3,7 +3,7 @@ import { Form, Button, Card } from "react-bootstrap";
 import { useRouter } from "next/router";
 import { acall, range, getInputValue, clamp } from "../../utils";
 import { createBoard } from "../../models/board";
-import { OnSubmitHandler, OnChangeHandler } from "../../utils/handler-types";
+import { FormEventHandler } from "../../utils/handler-types";
 
 const MIN_SECTIONS_COUNT = 1;
 const MAX_SECTIONS_COUNT = 4;
@@ -15,7 +15,7 @@ export default function CreateBoardCard(): JSX.Element {
   );
   const router = useRouter();
 
-  const handleSubmit: OnSubmitHandler = (event) => {
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
     const title = getInputValue("#createBoardTitle");
@@ -33,7 +33,9 @@ export default function CreateBoardCard(): JSX.Element {
     });
   };
 
-  const handleChangeSectionsCount: OnChangeHandler = (event) => {
+  const handleChangeSectionsCount: FormEventHandler<HTMLInputElement> = (
+    event
+  ) => {
     const input = event.target as HTMLInputElement;
     const value = clamp(
       Number(input.value),

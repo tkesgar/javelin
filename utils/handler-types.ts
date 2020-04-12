@@ -1,11 +1,21 @@
-export type OnSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => void;
+type FormElement =
+  | HTMLInputElement
+  | HTMLSelectElement
+  | HTMLTextAreaElement
+  | HTMLFormElement;
 
-export type OnChangeHandler = (
-  event: React.FormEvent<HTMLInputElement>
+export type FormEventHandler<T extends FormElement> = (
+  event: React.FormEvent<T>
 ) => void;
 
-export type OnClickHandler = (
-  event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+export type MouseEventHandler<T extends HTMLElement = HTMLElement> = (
+  event: React.MouseEvent<T, MouseEvent>
 ) => void;
 
-export type OnInputHandler = (event: React.FormEvent<HTMLDivElement>) => void;
+export type InputEventHandler<T extends HTMLElement = HTMLFormElement> = (
+  event: React.FormEvent<T>
+) => void;
+
+export type DragEventHandler<T extends HTMLElement = HTMLElement> = (
+  event: React.DragEvent<T>
+) => void;

@@ -116,7 +116,10 @@ export function useBoard(boardId: string): BoardData {
       .collection("boards")
       .doc(boardId)
       .onSnapshot((doc) => {
-        setBoardData(doc.data() as BoardData);
+        setBoardData({
+          id: boardId,
+          ...doc.data(),
+        } as BoardData);
       });
 
     return unsubscribe;
