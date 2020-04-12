@@ -1,24 +1,5 @@
 import * as firebase from "firebase/app";
 
-export abstract class BoardModel {
-  abstract get id(): string;
-}
-
-export class FirebaseBoard extends BoardModel {
-  private docRef: firebase.firestore.DocumentReference<
-    firebase.firestore.DocumentData
-  >;
-
-  constructor(docRef) {
-    super();
-    this.docRef = docRef;
-  }
-
-  get id(): string {
-    return this.docRef.id;
-  }
-}
-
 interface CreateBoardOpts {
   title: string;
   sections: {
@@ -26,7 +7,7 @@ interface CreateBoardOpts {
   }[];
 }
 
-export async function createBoard(opts: CreateBoardOpts): Promise<BoardModel> {
+export async function createBoard(opts: CreateBoardOpts): Promise<string> {
   const { title, sections } = opts;
 
   const db = firebase.firestore();
@@ -36,5 +17,5 @@ export async function createBoard(opts: CreateBoardOpts): Promise<BoardModel> {
     sections,
   });
 
-  return new FirebaseBoard(docRef);
+  return docRef.id;
 }

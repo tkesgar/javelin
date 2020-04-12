@@ -24,12 +24,12 @@ export default function CreateBoardCard(): JSX.Element {
     }));
 
     acall(async () => {
-      const board = await createBoard({
+      const boardId = await createBoard({
         title,
         sections: sections,
       });
 
-      await router.push(`/board?id=${board.id}`);
+      await router.push(`/board?id=${boardId}`);
     });
   };
 
