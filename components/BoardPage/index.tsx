@@ -1,9 +1,9 @@
 import * as React from "react";
-import * as firebase from "firebase/app";
 import { Container, Row, Col, Button, Card as BsCard } from "react-bootstrap";
 import { acall } from "../../utils";
 import Footer from "../Footer";
 import { OnClickHandler, OnInputHandler } from "../../utils/handler-types";
+import * as BoardModel from "../../models/board";
 
 type OnDeleteHandler = () => void;
 
@@ -11,67 +11,14 @@ interface BoardPageProps {
   boardId: string;
 }
 
-interface Card {
-  id: string;
-  sectionIndex: number;
-  content: string;
-}
-
-interface Section {
-  title: string;
-}
-
-interface Board {
-  title: string;
-  sections: Section[];
-}
-
 export default function BoardPage({ boardId }: BoardPageProps): JSX.Element {
-  const db = firebase.firestore();
-
-  const [boardData, setBoardData] = React.useState<Board>(null);
-  const [cards, setCards] = React.useState<Card[]>([]);
-  React.useEffect(() => {
-    const unsubscribeBoard = db
-      .collection("boards")
-      .doc(boardId)
-      .onSnapshot((doc) => {
-        const boardData = doc.data();
-        console.log(boardData);
-        setBoardData(boardData as Board);
-      });
-
-    const unsubscribeCards = db
-      .collection("boards")
-      .doc(boardId)
-      .collection("cards")
-      .onSnapshot((docs) => {
-        const cards = [];
-        docs.forEach((doc) => {
-          cards.push({
-            id: doc.id,
-            ...doc.data(),
-          });
-        });
-        console.log(cards);
-        setCards(cards);
-      });
-
-    return (): void => {
-      unsubscribeBoard();
-      unsubscribeCards();
-    };
-  }, []);
+  const boardData = BoardModel.useBoard(boardId);
+  const cards = BoardModel.useBoardCards(boardId);
 
   const createHandleAddCardClick: (sectionIndex: number) => OnClickHandler = (
     sectionIndex
   ) => (): void => {
-    db.collection("boards").doc(boardId).collection("cards").add({
-      sectionIndex,
-      content: "",
-    });
-
-    console.log(`Add new card to section ${sectionIndex}`);
+    acall(BoardModel.createCard(boardId, sectionIndex));
   };
 
   const createHandleInputCardContent: (cardId: string) => OnInputHandler = (
@@ -79,33 +26,13 @@ export default function BoardPage({ boardId }: BoardPageProps): JSX.Element {
   ) => (event): void => {
     const content = (event.target as HTMLDivElement).innerText;
 
-    acall(
-      db
-        .collection("boards")
-        .doc(boardId)
-        .collection("cards")
-        .doc(cardId)
-        .update({
-          content,
-        })
-    );
-
-    console.log(`update card ${cardId} content: ${content}`);
+    acall(BoardModel.updateCard(boardId, cardId, { content }));
   };
 
   const createHandleDeleteCardContent: (cardId: string) => OnDeleteHandler = (
     cardId: string
   ) => (): void => {
-    acall(
-      db
-        .collection("boards")
-        .doc(boardId)
-        .collection("cards")
-        .doc(cardId)
-        .delete()
-    );
-
-    console.log(`Delete card ${cardId}`);
+    acall(BoardModel.deleteCard(boardId, cardId));
   };
 
   if (!boardData) {
@@ -131,12 +58,7 @@ export default function BoardPage({ boardId }: BoardPageProps): JSX.Element {
                 );
 
                 acall(
-                  db
-                    .collection("boards")
-                    .doc(boardId)
-                    .collection("cards")
-                    .doc(cardId)
-                    .update({ sectionIndex: i })
+                  BoardModel.updateCard(boardId, cardId, { sectionIndex: i })
                 );
               }}
             >
