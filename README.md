@@ -1,6 +1,12 @@
 # javelin
 
+[![TypeScript](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
+[![ESLint](https://img.shields.io/badge/code%20style-ESLint-blueviolet)](https://eslint.org/)
+[![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io/)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/1c6baa2e-ef81-49df-8bd8-4af30a46d439/deploy-status)](https://app.netlify.com/sites/javelin-a87b9e98/deploys)
+
+> I've gotten closer to you now, Commander. Hehehe. But I'm gonna have to work
+> harder~
 
 javelin is a web app where people can arrange notes in a number of columns. I
 built this primarily to help with sprint retrospective in my office, but it may
