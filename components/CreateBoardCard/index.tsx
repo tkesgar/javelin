@@ -87,7 +87,7 @@ export default function CreateBoardCard(): JSX.Element {
               </Form.Group>
             ))}
           </div>
-          <Button block size="lg" variant="primary" type="submit">
+          <Button block variant="primary" type="submit">
             Create
           </Button>
         </Form>
