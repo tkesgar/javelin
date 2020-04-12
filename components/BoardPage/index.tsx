@@ -3,12 +3,7 @@ import * as firebase from "firebase/app";
 import { Container, Row, Col, Button, Card as BsCard } from "react-bootstrap";
 import { acall } from "../../utils";
 import Footer from "../Footer";
-
-type OnClickHandler = (
-  event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-) => void;
-
-type OnInputHandler = (event: React.FormEvent<HTMLDivElement>) => void;
+import { OnClickHandler, OnInputHandler } from "../../utils/handler-types";
 
 type OnDeleteHandler = () => void;
 
