@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Button } from "react-bootstrap";
-import Octicon, { X, Thumbsup } from "@primer/octicons-react";
+import { XIcon, ThumbsupIcon } from "@primer/octicons-react";
 import classNames from "classnames";
 import {
   InputEventHandler,
@@ -11,8 +11,8 @@ import { acall } from "../../utils";
 import styles from "./styles.module.scss";
 
 interface BoardCardProps {
-  id: string;
-  boardId: string;
+  id: number;
+  boardId: number;
   content?: string;
   voteCount?: number;
   [key: string]: unknown;
@@ -61,16 +61,12 @@ export default function BoardCard({
         <Button variant="success" size="sm" onClick={handleClickVoteUp}>
           <div className="d-inline-block mr-2">{voteCount}</div>
           <span style={{ position: "relative", top: "-1px" }}>
-            <Octicon
-              icon={Thumbsup}
-              ariaLabel="Vote up"
-              verticalAlign="middle"
-            />
+            <ThumbsupIcon ariaLabel="Vote up" verticalAlign="middle" />
           </span>
         </Button>
         <Button variant="danger" size="sm" onClick={handleClickDelete}>
           <span style={{ position: "relative", top: "-1px" }}>
-            <Octicon icon={X} ariaLabel="Delete" verticalAlign="middle" />
+            <XIcon ariaLabel="Delete" verticalAlign="middle" />
           </span>
         </Button>
       </div>

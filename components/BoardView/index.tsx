@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Row, Col, Button } from "react-bootstrap";
-import Octicon, { Plus } from "@primer/octicons-react";
+import { PlusIcon } from "@primer/octicons-react";
 import { acall } from "../../utils";
 import { MouseEventHandler, DragEventHandler } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
@@ -13,11 +13,11 @@ interface BoardViewProps {
 
 export default function BoardView({ board }: BoardViewProps): JSX.Element {
   const router = useRouter();
-  const cards = BoardModel.useBoardCards(board.id);
+  const cards = BoardModel.useBoardCards(board.slug);
 
-  function createHandleAddCardClick(sectionIndex: number): MouseEventHandler {
+  function createHandleAddCardClick(sectionId: number): MouseEventHandler {
     return (): void => {
-      acall(BoardModel.createCard(board.id, sectionIndex));
+      acall(BoardModel.createCard(sectionId));
     };
   }
 
@@ -25,15 +25,15 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
     card: BoardModel.CardData
   ): DragEventHandler {
     return (event: React.DragEvent<HTMLDivElement>): void => {
-      event.dataTransfer.setData("application/x.card-id", card.id);
+      event.dataTransfer.setData("application/x.card-id", card.id.toString(10));
       event.dataTransfer.setData("text/plain", card.content);
     };
   }
 
-  function createHandleDropSection(sectionIndex: number): DragEventHandler {
+  function createHandleDropSection(sectionId: number): DragEventHandler {
     return (event): void => {
       const cardId = event.dataTransfer.getData("application/x.card-id");
-      acall(BoardModel.updateCard(board.id, cardId, { sectionIndex }));
+      acall(BoardModel.updateCard(parseInt(cardId, 10), { sectionId }));
     };
   }
 
@@ -56,7 +56,7 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
       const boardTitle = board.title;
 
       await router.push("/");
-      await BoardModel.removeBoard(board.id);
+      await BoardModel.removeBoard(board.slug);
 
       alert(`Board ${boardTitle} deleted.`);
     });
@@ -65,13 +65,13 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
   return (
     <>
       <Row className="mb-5">
-        {board.sections.map((section, sectionIndex) => (
+        {board.sections.map((section) => (
           <Col
             className="mb-4 mb-lg-0"
             lg={12 / board.sections.length}
-            key={sectionIndex}
+            key={section.id}
             onDragOver={handleDragOverSection}
-            onDrop={createHandleDropSection(sectionIndex)}
+            onDrop={createHandleDropSection(section.id)}
           >
             <h2 className="h4 text-center mb-3">{section.title}</h2>
             <Button
@@ -79,14 +79,14 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
               type="button"
               className="mb-3"
               size="sm"
-              onClick={createHandleAddCardClick(sectionIndex)}
+              onClick={createHandleAddCardClick(section.id)}
             >
               <span style={{ position: "relative", top: "-1px" }}>
-                <Octicon icon={Plus} verticalAlign="middle" ariaLabel="Add" />
+                <PlusIcon verticalAlign="middle" />
               </span>
             </Button>
             {cards
-              .filter((card) => card.sectionIndex === sectionIndex)
+              .filter((card) => card.sectionId === section.id)
               .map((card) => (
                 <BoardCard
                   key={card.id}
