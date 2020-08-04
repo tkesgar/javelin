@@ -12,12 +12,22 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - run: |
+      - uses: actions/cache@v2.1.0
+        with:
+          path: |
+            ~/.npm
+            ~/.next/cache
+          key: node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-
+      - name: Install dependencies
+        run: |
           sudo apt-get update -y
           sudo apt-get install rsync -y
-      - run: which ssh-agent || sudo apt-get install openssh-client -y
-      - run: npm ci
-      - run: |
+          which ssh-agent || sudo apt-get install openssh-client -y
+          npm ci
+      - name: Deploy
+        run: |
           eval $(ssh-agent -s)
           echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
           mkdir -p ~/.ssh
@@ -27,11 +37,3 @@ jobs:
           npx pm2 deploy production
         env:
           DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-      - uses: actions/cache@v2.1.0
-        with:
-          path: |
-            ~/.npm
-            ~/.next/cache
-          key: node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            node-

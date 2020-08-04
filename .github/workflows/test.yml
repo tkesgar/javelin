@@ -2,19 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   test:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
-      - run: npm run lint:compile
-      - run: npm run lint:scripts
-      - run: npm run lint:styles
       - uses: actions/cache@v2.1.0
         with:
           path: |
@@ -23,3 +21,10 @@ jobs:
           key: node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-
+      - name: Install dependencies
+        run: npm ci
+      - name: Execute linters
+        run: |
+          npm run lint:compile
+          npm run lint:scripts
+          npm run lint:styles
