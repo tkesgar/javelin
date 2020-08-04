@@ -24,4 +24,6 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+        env:
+          DEPLOY_PRIVATE_KEY: ${{ secrets.DeployPrivateKey }}
       - run: npx pm2 deploy production
