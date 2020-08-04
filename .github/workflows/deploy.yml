@@ -20,7 +20,7 @@ jobs:
         which ssh-agent || apt-get install openssh-client -y
         eval $(ssh-agent -s)
     - run:
-        echo "$DEPLOY_PRIVATE_KEY_STAGING" | base64 -d | ssh-add -
+        echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
         mkdir -p ~/.ssh
         chmod 700 ~/.ssh
         ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
