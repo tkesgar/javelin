@@ -1,28 +1,27 @@
 name: Deploy
 
 on:
-  create:
-    tags:
-      - deploy-*
   push:
     branches:
       - master
+    tags:
+      - deploy-*
 
 jobs:
   deploy:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
-    - run: |
-        apt-get update -y
-        apt-get install rsync -y
-    - run: |
-        which ssh-agent || apt-get install openssh-client -y
-        eval $(ssh-agent -s)
-    - run:
-        echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
-        chmod 644 ~/.ssh/known_hosts
-    - run: npx pm2 deploy production
+      - uses: actions/checkout@v2
+      - run: |
+          apt-get update -y
+          apt-get install rsync -y
+      - run: |
+          which ssh-agent || apt-get install openssh-client -y
+          eval $(ssh-agent -s)
+      - run: |
+          echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+      - run: npx pm2 deploy production
