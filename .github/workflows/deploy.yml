@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          apt-get update -y
-          apt-get install rsync -y
+          sudo apt-get update -y
+          sudo apt-get install rsync -y
       - run: |
           which ssh-agent || apt-get install openssh-client -y
           eval $(ssh-agent -s)
