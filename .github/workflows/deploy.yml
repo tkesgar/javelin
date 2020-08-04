@@ -18,7 +18,6 @@ jobs:
       - run: |
           which ssh-agent || apt-get install openssh-client -y
           eval $(ssh-agent -s)
-      - run: |
           echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
