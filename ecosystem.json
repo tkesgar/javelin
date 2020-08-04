@@ -14,7 +14,7 @@
       "ref": "origin/deploy-action",
       "repo": "git@github.com:tkesgar/javelin.git",
       "path": "/home/node/apps/javelin",
-      "pre-deploy-local": "npm run build && rsync -vrth --progress --delete --exclude='cache*' .next/ node@tkesgar.com:/home/node/apps/kashima/current/.next/",
+      "pre-deploy-local": "npm run build && rsync -vrth --progress --delete --exclude='cache*' .next/ node@tkesgar.com:/home/node/apps/javelin/current/.next/",
       "post-deploy": "npm install && pm2 startOrRestart ecosystem.json"
     }
   }
