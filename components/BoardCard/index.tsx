@@ -2,10 +2,7 @@ import * as React from "react";
 import { Button } from "react-bootstrap";
 import { XIcon, ThumbsupIcon } from "@primer/octicons-react";
 import classNames from "classnames";
-import {
-  InputEventHandler,
-  MouseEventHandler,
-} from "../../utils/handler-types";
+import { InputEventHandler } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
 import { acall } from "../../utils";
 import styles from "./styles.module.scss";
