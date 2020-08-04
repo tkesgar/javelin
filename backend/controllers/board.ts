@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import db from "../database";
-import { Card } from "react-bootstrap";
 
 export interface BoardData {
   id: number;

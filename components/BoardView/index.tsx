@@ -6,6 +6,7 @@ import { MouseEventHandler, DragEventHandler } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
 import BoardCard from "../BoardCard";
 import { useRouter } from "next/router";
+import { mutate } from "swr";
 
 interface BoardViewProps {
   board: BoardModel.BoardData;
@@ -14,12 +15,6 @@ interface BoardViewProps {
 export default function BoardView({ board }: BoardViewProps): JSX.Element {
   const router = useRouter();
   const cards = BoardModel.useBoardCards(board.slug);
-
-  function createHandleAddCardClick(sectionId: number): MouseEventHandler {
-    return (): void => {
-      acall(BoardModel.createCard(sectionId));
-    };
-  }
 
   function createHandleDragStartCard(
     card: BoardModel.CardData
@@ -32,8 +27,20 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
 
   function createHandleDropSection(sectionId: number): DragEventHandler {
     return (event): void => {
-      const cardId = event.dataTransfer.getData("application/x.card-id");
-      acall(BoardModel.updateCard(parseInt(cardId, 10), { sectionId }));
+      const strCardId = event.dataTransfer.getData("application/x.card-id");
+      acall(async () => {
+        const cardId = parseInt(strCardId, 10);
+        await BoardModel.updateCard(cardId, { sectionId });
+        await mutate(`/api/board/${board.slug}/card`, {
+          data: cards.map((c) => {
+            if (c.id !== cardId) {
+              return c;
+            }
+
+            return { ...c, sectionId };
+          }),
+        });
+      });
     };
   }
 
@@ -79,7 +86,18 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
               type="button"
               className="mb-3"
               size="sm"
-              onClick={createHandleAddCardClick(section.id)}
+              onClick={(): void => {
+                acall(async () => {
+                  const card = await BoardModel.createCard(section.id);
+                  await mutate(
+                    `/api/board/${board.slug}/card`,
+                    {
+                      data: [...cards, card],
+                    },
+                    true
+                  );
+                });
+              }}
             >
               <span style={{ position: "relative", top: "-1px" }}>
                 <PlusIcon verticalAlign="middle" />
@@ -91,27 +109,41 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
                 <BoardCard
                   key={card.id}
                   id={card.id}
-                  boardId={board.id}
                   content={card.content}
-                  voteCount={card.voteCount}
+                  voteCount={card.vote}
                   className="mb-2"
                   draggable
                   onDragStart={createHandleDragStartCard(card)}
+                  onDelete={(): void => {
+                    acall(
+                      mutate(`/api/board/${board.slug}/card`, {
+                        data: cards.filter((c) => c.id !== card.id),
+                      })
+                    );
+                  }}
+                  onIncrementVote={(): void => {
+                    console.log(card);
+                    acall(
+                      mutate(`/api/board/${board.slug}/card`, {
+                        data: cards.map((c) => {
+                          if (c.id !== card.id) {
+                            return c;
+                          }
+
+                          return { ...c, vote: c.vote + 1 };
+                        }),
+                      })
+                    );
+                  }}
                 />
               ))}
           </Col>
         ))}
       </Row>
       <div className="text-center">
-        {cards.length > 0 ? (
-          <div className="text-muted">
-            To delete this board, you need to remove all cards first.
-          </div>
-        ) : (
-          <Button type="button" variant="link" onClick={handleClickDeleteBoard}>
-            Delete board
-          </Button>
-        )}
+        <Button type="button" variant="link" onClick={handleClickDeleteBoard}>
+          Delete board
+        </Button>
       </div>
     </>
   );

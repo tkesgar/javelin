@@ -1,4 +1,3 @@
-import * as React from "react";
 import axios from "axios";
 import useSWR from "swr";
 
@@ -16,7 +15,7 @@ export interface CardData {
   id: number;
   sectionId: number;
   content: string;
-  voteCount: number;
+  vote: number;
 }
 
 interface CreateBoardOpts {
@@ -48,39 +47,50 @@ interface CreateCardOpts {
 }
 
 export async function createCard(
-  boardId: string,
-  sectionIndex: number,
+  sectionId: number,
   opts: CreateCardOpts = {}
-): Promise<string> {
-  throw new Error("Not implemented yet");
+): Promise<CardData> {
+  const { content } = opts;
+
+  const response = await axios.post(`/api/card`, {
+    sectionId,
+    content,
+  });
+
+  return response.data;
 }
 
 interface UpdateCardOpts {
-  sectionIndex?: number;
+  sectionId?: number;
   content?: string;
 }
 
 export async function updateCard(
-  boardId: string,
-  cardId: string,
+  cardId: number,
   opts: UpdateCardOpts = {}
-): Promise<void> {
-  throw new Error("Not implemented yet");
+): Promise<CardData> {
+  const { sectionId, content } = opts;
+
+  const response = await axios.patch(`/api/card/${cardId}`, {
+    sectionId,
+    content,
+  });
+
+  return response.data;
 }
 
-export async function deleteCard(
-  boardId: string,
-  cardId: string
-): Promise<void> {
-  throw new Error("Not implemented yet");
+export async function deleteCard(cardId: number): Promise<void> {
+  await axios.delete(`/api/card/${cardId}`);
 }
 
 export async function incrementVoteCard(
-  boardId: string,
-  cardId: string,
+  cardId: number,
   value = 1
-): Promise<void> {
-  throw new Error("Not implemented yet");
+): Promise<CardData> {
+  const response = await axios.post(`/api/card/${cardId}/vote`, {
+    amount: value,
+  });
+  return response.data;
 }
 
 export function useBoard(boardSlug: string): BoardData {
@@ -112,7 +122,7 @@ export function useBoardCards(boardSlug: string): CardData[] {
       id: data.id,
       sectionId: data.sectionId,
       content: data.content,
-      voteCount: data.vote,
+      vote: data.vote,
     };
   });
 }
