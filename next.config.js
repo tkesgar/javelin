@@ -3,7 +3,7 @@ const withSharo = require("@tkesgar/sharo-next");
 const package = require("./package.json");
 
 function getCommitHash() {
-  return childProcess.execSync("git rev-parse master").toString().trim();
+  return childProcess.execSync("git rev-parse HEAD").toString().trim();
 }
 
 function getVersion() {
