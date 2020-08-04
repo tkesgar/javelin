@@ -11,7 +11,7 @@
     "production": {
       "user": "node",
       "host": "tkesgar.com",
-      "ref": "origin/deploy-action",
+      "ref": "origin/master",
       "repo": "git@github.com:tkesgar/javelin.git",
       "path": "/home/node/apps/javelin",
       "pre-deploy-local": "npm run build && rsync -vrth --progress --delete --exclude='cache*' .next/ node@tkesgar.com:/home/node/apps/javelin/current/.next/",
