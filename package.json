@@ -6,6 +6,7 @@
     "dev": "next",
     "build": "next build && next export",
     "start": "next start",
+    "lint:compile": "tsc --noEmit",
     "lint:scripts": "eslint . --ext js,ts,tsx",
     "lint:styles": "stylelint **/*.scss",
     "format": "prettier --write ."
