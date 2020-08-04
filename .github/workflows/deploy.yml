@@ -24,5 +24,5 @@ jobs:
           ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
         env:
-          DEPLOY_PRIVATE_KEY: ${{ secrets.DeployPrivateKey }}
+          DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
       - run: npx pm2 deploy production
