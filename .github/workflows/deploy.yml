@@ -25,4 +25,13 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
         env:
           DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+      - run: npm ci
       - run: npx pm2 deploy production
+      - uses: actions/cache@v2.1.0
+        with:
+          path: |
+            ~/.npm
+            ~/.next/cache
+          key: node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-
