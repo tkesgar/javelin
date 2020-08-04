@@ -12,19 +12,17 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          sudo apt-get update -y
-          sudo apt-get install rsync -y
-      - run: |
-          which ssh-agent || apt-get install openssh-client -y
-          eval $(ssh-agent -s)
-          echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+      - run: sudo apt-get update -y
+      - run: sudo apt-get install rsync -y
+      - run: which ssh-agent || sudo apt-get install openssh-client -y
+      - run: eval $(ssh-agent -s)
+      - run: echo "$DEPLOY_PRIVATE_KEY" | base64 -d | ssh-add -
         env:
           DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+      - run: mkdir -p ~/.ssh
+      - run: chmod 700 ~/.ssh
+      - run: ssh-keyscan tkesgar.com >> ~/.ssh/known_hosts
+      - run: chmod 644 ~/.ssh/known_hosts
       - run: npm ci
       - run: npx pm2 deploy production
       - uses: actions/cache@v2.1.0
