@@ -1,11 +1,12 @@
 import * as React from "react";
 import { Row, Col, Button } from "react-bootstrap";
-import Octicon, { Plus } from "@primer/octicons-react";
+import { PlusIcon } from "@primer/octicons-react";
 import { acall } from "../../utils";
 import { MouseEventHandler, DragEventHandler } from "../../utils/handler-types";
 import * as BoardModel from "../../models/board";
 import BoardCard from "../BoardCard";
 import { useRouter } from "next/router";
+import { mutate } from "swr";
 
 interface BoardViewProps {
   board: BoardModel.BoardData;
@@ -13,27 +14,33 @@ interface BoardViewProps {
 
 export default function BoardView({ board }: BoardViewProps): JSX.Element {
   const router = useRouter();
-  const cards = BoardModel.useBoardCards(board.id);
-
-  function createHandleAddCardClick(sectionIndex: number): MouseEventHandler {
-    return (): void => {
-      acall(BoardModel.createCard(board.id, sectionIndex));
-    };
-  }
+  const cards = BoardModel.useBoardCards(board.slug);
 
   function createHandleDragStartCard(
     card: BoardModel.CardData
   ): DragEventHandler {
     return (event: React.DragEvent<HTMLDivElement>): void => {
-      event.dataTransfer.setData("application/x.card-id", card.id);
+      event.dataTransfer.setData("application/x.card-id", card.id.toString(10));
       event.dataTransfer.setData("text/plain", card.content);
     };
   }
 
-  function createHandleDropSection(sectionIndex: number): DragEventHandler {
+  function createHandleDropSection(sectionId: number): DragEventHandler {
     return (event): void => {
-      const cardId = event.dataTransfer.getData("application/x.card-id");
-      acall(BoardModel.updateCard(board.id, cardId, { sectionIndex }));
+      const strCardId = event.dataTransfer.getData("application/x.card-id");
+      acall(async () => {
+        const cardId = parseInt(strCardId, 10);
+        await BoardModel.updateCard(cardId, { sectionId });
+        await mutate(`/api/board/${board.slug}/card`, {
+          data: cards.map((c) => {
+            if (c.id !== cardId) {
+              return c;
+            }
+
+            return { ...c, sectionId };
+          }),
+        });
+      });
     };
   }
 
@@ -56,7 +63,7 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
       const boardTitle = board.title;
 
       await router.push("/");
-      await BoardModel.removeBoard(board.id);
+      await BoardModel.removeBoard(board.slug);
 
       alert(`Board ${boardTitle} deleted.`);
     });
@@ -65,13 +72,13 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
   return (
     <>
       <Row className="mb-5">
-        {board.sections.map((section, sectionIndex) => (
+        {board.sections.map((section) => (
           <Col
             className="mb-4 mb-lg-0"
             lg={12 / board.sections.length}
-            key={sectionIndex}
+            key={section.id}
             onDragOver={handleDragOverSection}
-            onDrop={createHandleDropSection(sectionIndex)}
+            onDrop={createHandleDropSection(section.id)}
           >
             <h2 className="h4 text-center mb-3">{section.title}</h2>
             <Button
@@ -79,39 +86,64 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
               type="button"
               className="mb-3"
               size="sm"
-              onClick={createHandleAddCardClick(sectionIndex)}
+              onClick={(): void => {
+                acall(async () => {
+                  const card = await BoardModel.createCard(section.id);
+                  await mutate(
+                    `/api/board/${board.slug}/card`,
+                    {
+                      data: [...cards, card],
+                    },
+                    true
+                  );
+                });
+              }}
             >
               <span style={{ position: "relative", top: "-1px" }}>
-                <Octicon icon={Plus} verticalAlign="middle" ariaLabel="Add" />
+                <PlusIcon verticalAlign="middle" />
               </span>
             </Button>
             {cards
-              .filter((card) => card.sectionIndex === sectionIndex)
+              .filter((card) => card.sectionId === section.id)
               .map((card) => (
                 <BoardCard
                   key={card.id}
                   id={card.id}
-                  boardId={board.id}
                   content={card.content}
-                  voteCount={card.voteCount}
+                  voteCount={card.vote}
                   className="mb-2"
                   draggable
                   onDragStart={createHandleDragStartCard(card)}
+                  onDelete={(): void => {
+                    acall(
+                      mutate(`/api/board/${board.slug}/card`, {
+                        data: cards.filter((c) => c.id !== card.id),
+                      })
+                    );
+                  }}
+                  onIncrementVote={(): void => {
+                    console.log(card);
+                    acall(
+                      mutate(`/api/board/${board.slug}/card`, {
+                        data: cards.map((c) => {
+                          if (c.id !== card.id) {
+                            return c;
+                          }
+
+                          return { ...c, vote: c.vote + 1 };
+                        }),
+                      })
+                    );
+                  }}
                 />
               ))}
           </Col>
         ))}
       </Row>
       <div className="text-center">
-        {cards.length > 0 ? (
-          <div className="text-muted">
-            To delete this board, you need to remove all cards first.
-          </div>
-        ) : (
-          <Button type="button" variant="link" onClick={handleClickDeleteBoard}>
-            Delete board
-          </Button>
-        )}
+        <Button type="button" variant="link" onClick={handleClickDeleteBoard}>
+          Delete board
+        </Button>
       </div>
     </>
   );

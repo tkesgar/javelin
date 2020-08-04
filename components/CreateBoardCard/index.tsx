@@ -3,7 +3,6 @@ import { Form, Button, Card } from "react-bootstrap";
 import { useRouter } from "next/router";
 import { acall, range, getInputValue, clamp } from "../../utils";
 import { createBoard } from "../../models/board";
-import { FormEventHandler } from "../../utils/handler-types";
 
 const MIN_SECTIONS_COUNT = 1;
 const MAX_SECTIONS_COUNT = 4;
@@ -15,43 +14,29 @@ export default function CreateBoardCard(): JSX.Element {
   );
   const router = useRouter();
 
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-
-    const title = getInputValue("#createBoardTitle");
-    const sections = range(1, sectionsCount).map((i) => ({
-      title: getInputValue(`#createBoardSectionTitle${i}`),
-    }));
-
-    acall(async () => {
-      const boardId = await createBoard({
-        title,
-        sections: sections,
-      });
-
-      await router.push(`/board?id=${boardId}`);
-    });
-  };
-
-  const handleChangeSectionsCount: FormEventHandler<HTMLInputElement> = (
-    event
-  ) => {
-    const input = event.target as HTMLInputElement;
-    const value = clamp(
-      Number(input.value),
-      MIN_SECTIONS_COUNT,
-      MAX_SECTIONS_COUNT
-    );
-
-    setSectionsCount(value);
-    input.value = String(value);
-  };
-
   return (
     <Card>
       <Card.Body>
         <Card.Title className="mb-4 text-center">Create a new board</Card.Title>
-        <Form onSubmit={handleSubmit}>
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+
+            const title = getInputValue("#createBoardTitle");
+            const sections = range(1, sectionsCount).map((i) => ({
+              title: getInputValue(`#createBoardSectionTitle${i}`),
+            }));
+
+            acall(async () => {
+              const boardId = await createBoard({
+                title,
+                sections: sections,
+              });
+
+              await router.push(`/board/${boardId}`);
+            });
+          }}
+        >
           <Form.Group controlId="createBoardTitle">
             <Form.Label>Board title</Form.Label>
             <Form.Control
@@ -70,7 +55,17 @@ export default function CreateBoardCard(): JSX.Element {
               defaultValue={DEFAULT_SECTIONS_COUNT}
               min={MIN_SECTIONS_COUNT}
               max={MAX_SECTIONS_COUNT}
-              onChange={handleChangeSectionsCount}
+              onChange={(event) => {
+                const input = event.target as HTMLInputElement;
+                const value = clamp(
+                  Number(input.value),
+                  MIN_SECTIONS_COUNT,
+                  MAX_SECTIONS_COUNT
+                );
+
+                setSectionsCount(value);
+                input.value = String(value);
+              }}
               style={{ width: "5rem" }}
             />
           </Form.Group>

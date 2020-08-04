@@ -5,11 +5,11 @@ import Footer from "../Footer";
 import BoardView from "../BoardView";
 
 interface BoardPageProps {
-  boardId: string;
+  slug: string;
 }
 
-export default function BoardPage({ boardId }: BoardPageProps): JSX.Element {
-  const board = BoardModel.useBoard(boardId);
+export default function BoardPage({ slug }: BoardPageProps): JSX.Element {
+  const board = BoardModel.useBoard(slug);
 
   if (!board) {
     return null;

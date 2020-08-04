@@ -117,12 +117,3 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
-
-# Project ignores
-# ==============================================================================
-
-# Next.js export output
-out
-
-# Firebase configuration file
-firebase.config.json

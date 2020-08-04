@@ -1,19 +1,21 @@
-import * as React from "react";
-import * as firebase from "firebase/app";
+import axios from "axios";
+import useSWR from "swr";
 
 export interface BoardData {
-  id: string;
+  id: number;
+  slug: string;
   title: string;
   sections: {
+    id: number;
     title: string;
   }[];
 }
 
 export interface CardData {
-  id: string;
-  sectionIndex: number;
+  id: number;
+  sectionId: number;
   content: string;
-  voteCount: number;
+  vote: number;
 }
 
 interface CreateBoardOpts {
@@ -26,20 +28,18 @@ interface CreateBoardOpts {
 export async function createBoard(opts: CreateBoardOpts): Promise<string> {
   const { title, sections } = opts;
 
-  const db = firebase.firestore();
+  const sectionTitles = sections.map((section) => section.title);
 
-  const docRef = await db.collection("boards").add({
+  const response = await axios.post("/api/board", {
     title,
-    sections,
+    sectionTitles,
   });
 
-  return docRef.id;
+  return response.data.slug;
 }
 
-export async function removeBoard(id: string): Promise<void> {
-  const db = firebase.firestore();
-
-  await db.collection("boards").doc(id).delete();
+export async function removeBoard(slug: string): Promise<void> {
+  await axios.delete(`/api/board/${slug}`);
 }
 
 interface CreateCardOpts {
@@ -47,136 +47,82 @@ interface CreateCardOpts {
 }
 
 export async function createCard(
-  boardId: string,
-  sectionIndex: number,
+  sectionId: number,
   opts: CreateCardOpts = {}
-): Promise<string> {
-  const { content = "" } = opts;
+): Promise<CardData> {
+  const { content } = opts;
 
-  const db = firebase.firestore();
+  const response = await axios.post(`/api/card`, {
+    sectionId,
+    content,
+  });
 
-  const docRef = await db
-    .collection("boards")
-    .doc(boardId)
-    .collection("cards")
-    .add({
-      sectionIndex,
-      content,
-    });
-
-  return docRef.id;
+  return response.data;
 }
 
 interface UpdateCardOpts {
-  sectionIndex?: number;
+  sectionId?: number;
   content?: string;
 }
 
 export async function updateCard(
-  boardId: string,
-  cardId: string,
+  cardId: number,
   opts: UpdateCardOpts = {}
-): Promise<void> {
-  const { sectionIndex, content } = opts;
+): Promise<CardData> {
+  const { sectionId, content } = opts;
 
-  const db = firebase.firestore();
+  const response = await axios.patch(`/api/card/${cardId}`, {
+    sectionId,
+    content,
+  });
 
-  const data: Partial<CardData> = {};
-
-  if (typeof sectionIndex !== "undefined") {
-    data.sectionIndex = sectionIndex;
-  }
-
-  if (typeof content !== "undefined") {
-    data.content = content;
-  }
-
-  await db
-    .collection("boards")
-    .doc(boardId)
-    .collection("cards")
-    .doc(cardId)
-    .update(data);
+  return response.data;
 }
 
-export async function deleteCard(
-  boardId: string,
-  cardId: string
-): Promise<void> {
-  const db = firebase.firestore();
-
-  await db
-    .collection("boards")
-    .doc(boardId)
-    .collection("cards")
-    .doc(cardId)
-    .delete();
+export async function deleteCard(cardId: number): Promise<void> {
+  await axios.delete(`/api/card/${cardId}`);
 }
 
 export async function incrementVoteCard(
-  boardId: string,
-  cardId: string,
+  cardId: number,
   value = 1
-): Promise<void> {
-  const db = firebase.firestore();
-
-  await db
-    .collection("boards")
-    .doc(boardId)
-    .collection("cards")
-    .doc(cardId)
-    .update({
-      voteCount: firebase.firestore.FieldValue.increment(value),
-    });
+): Promise<CardData> {
+  const response = await axios.post(`/api/card/${cardId}/vote`, {
+    amount: value,
+  });
+  return response.data;
 }
 
-export function useBoard(boardId: string): BoardData {
-  const [boardData, setBoardData] = React.useState<BoardData>(null);
+export function useBoard(boardSlug: string): BoardData {
+  const { data: response } = useSWR(`/api/board/${boardSlug}`, axios);
 
-  React.useEffect(() => {
-    const db = firebase.firestore();
+  if (!response) {
+    return null;
+  }
 
-    const unsubscribe = db
-      .collection("boards")
-      .doc(boardId)
-      .onSnapshot((doc) => {
-        setBoardData({
-          id: boardId,
-          ...doc.data(),
-        } as BoardData);
-      });
-
-    return unsubscribe;
-  }, [boardId]);
+  const boardData = {
+    id: response.data.id,
+    slug: response.data.slug,
+    title: response.data.title,
+    sections: response.data.sections,
+  };
 
   return boardData;
 }
 
-export function useBoardCards(boardId: string): CardData[] {
-  const [cards, setCards] = React.useState<CardData[]>([]);
+export function useBoardCards(boardSlug: string): CardData[] {
+  const { data: response } = useSWR(`/api/board/${boardSlug}/card`, axios);
 
-  React.useEffect(() => {
-    const db = firebase.firestore();
+  if (!response) {
+    return [];
+  }
 
-    const unsubscribe = db
-      .collection("boards")
-      .doc(boardId)
-      .collection("cards")
-      .onSnapshot((docs) => {
-        const cards = [];
-
-        docs.forEach((doc) => {
-          cards.push({
-            id: doc.id,
-            ...doc.data(),
-          });
-        });
-
-        setCards(cards);
-      });
-
-    return unsubscribe;
-  }, [boardId]);
-
-  return cards;
+  return response.data.map((data) => {
+    return {
+      id: data.id,
+      sectionId: data.sectionId,
+      content: data.content,
+      vote: data.vote,
+    };
+  });
 }
