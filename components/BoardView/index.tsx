@@ -80,7 +80,7 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
               size="sm"
               onClick={(): void => {
                 acall(async () => {
-                  const card = await BoardModel.createCard(section.id);
+                  await BoardModel.createCard(section.id);
                   await mutate(`/board/${board.slug}`);
                 });
               }}
