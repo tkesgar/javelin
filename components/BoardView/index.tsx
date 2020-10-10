@@ -20,26 +20,18 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
     card: BoardModel.CardData
   ): DragEventHandler {
     return (event: React.DragEvent<HTMLDivElement>): void => {
-      event.dataTransfer.setData("application/x.card-id", card.id.toString(10));
+      event.dataTransfer.setData("application/x.card-id", card.id);
       event.dataTransfer.setData("text/plain", card.content);
     };
   }
 
-  function createHandleDropSection(sectionId: number): DragEventHandler {
+  function createHandleDropSection(sectionId: string): DragEventHandler {
     return (event): void => {
       const strCardId = event.dataTransfer.getData("application/x.card-id");
       acall(async () => {
-        const cardId = parseInt(strCardId, 10);
-        await BoardModel.updateCard(cardId, { sectionId });
-        await mutate(`/api/board/${board.slug}/card`, {
-          data: cards.map((c) => {
-            if (c.id !== cardId) {
-              return c;
-            }
-
-            return { ...c, sectionId };
-          }),
-        });
+        const cardId = strCardId;
+        await BoardModel.updateCardSection(cardId, sectionId);
+        await mutate(`/board/${board.slug}`);
       });
     };
   }
@@ -88,14 +80,8 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
               size="sm"
               onClick={(): void => {
                 acall(async () => {
-                  const card = await BoardModel.createCard(section.id);
-                  await mutate(
-                    `/api/board/${board.slug}/card`,
-                    {
-                      data: [...cards, card],
-                    },
-                    true
-                  );
+                  await BoardModel.createCard(section.id);
+                  await mutate(`/board/${board.slug}`);
                 });
               }}
             >
@@ -115,25 +101,11 @@ export default function BoardView({ board }: BoardViewProps): JSX.Element {
                   draggable
                   onDragStart={createHandleDragStartCard(card)}
                   onDelete={(): void => {
-                    acall(
-                      mutate(`/api/board/${board.slug}/card`, {
-                        data: cards.filter((c) => c.id !== card.id),
-                      })
-                    );
+                    acall(mutate(`/board/${board.slug}`));
                   }}
                   onIncrementVote={(): void => {
                     console.log(card);
-                    acall(
-                      mutate(`/api/board/${board.slug}/card`, {
-                        data: cards.map((c) => {
-                          if (c.id !== card.id) {
-                            return c;
-                          }
-
-                          return { ...c, vote: c.vote + 1 };
-                        }),
-                      })
-                    );
+                    acall(mutate(`/board/${board.slug}`));
                   }}
                 />
               ))}

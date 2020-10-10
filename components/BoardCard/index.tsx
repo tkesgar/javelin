@@ -8,7 +8,7 @@ import { acall } from "../../utils";
 import styles from "./styles.module.scss";
 
 interface BoardCardProps {
-  id: number;
+  id: string;
   content?: string;
   voteCount?: number;
   onDelete?: () => void;
