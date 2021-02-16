@@ -1,6 +1,10 @@
 import * as React from "react";
-import CreateBoardPage from "../components/CreateBoardPage";
 
 export default function Index(): JSX.Element {
-  return <CreateBoardPage />;
+  return (
+    <>
+      <h1>Hello world!</h1>
+      <p>It works!</p>
+    </>
+  );
 }

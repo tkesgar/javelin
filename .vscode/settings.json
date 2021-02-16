@@ -1,11 +1,8 @@
 {
-  "javascript.validate.enable": false,
-  "javascript.format.enable": false,
-  "eslint.enable": true,
-  "eslint.format.enable": true,
-  "css.validate": false,
-  "scss.validate": false,
   "stylelint.enable": true,
   "editor.formatOnPaste": true,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  }
 }

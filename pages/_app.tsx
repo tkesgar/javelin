@@ -35,12 +35,11 @@ export default function App({ Component, pageProps }: AppProps): JSX.Element {
           sizes="16x16"
           href="/favicon-16x16.png"
         />
-        <link rel="manifest" href="/site.webmanifest" />
 
-        <title>javelin | Interactive Notes</title>
+        <title>javelin</title>
         <meta
           name="description"
-          content="javelin is a web app where people can arrange notes in a number of columns, useful for activities such as sprint retrospective."
+          content="javelin is an app where people can arrange notes in a number of columns"
         />
       </Head>
       <Component {...pageProps} />
