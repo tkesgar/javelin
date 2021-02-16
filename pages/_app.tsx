@@ -2,18 +2,14 @@ import * as React from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";
 import "@/styles/main.scss";
-import firebase from "firebase/app";
-import JAVELIN_FIREBASE_CONFIG from "@/firebase-javelin.config.json";
+import { AuthProvider } from "@/services/firebase/auth";
+import { initializeApp } from "@/services/firebase";
 
-const firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG
-  ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG)
-  : JAVELIN_FIREBASE_CONFIG;
+if (typeof window !== "undefined") {
+  initializeApp();
+}
 
 export default function App({ Component, pageProps }: AppProps): JSX.Element {
-  React.useEffect(() => {
-    firebase.initializeApp(firebaseConfig);
-  });
-
   return (
     <>
       <Head>
@@ -49,10 +45,12 @@ export default function App({ Component, pageProps }: AppProps): JSX.Element {
         <title>javelin</title>
         <meta
           name="description"
-          content="javelin is an app where people can arrange notes in a number of columns"
+          content="javelin is an app where people can arrange notes in a number of columns."
         />
       </Head>
-      <Component {...pageProps} />
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
     </>
   );
 }

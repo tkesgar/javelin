@@ -1,0 +1,11 @@
+import firebase from "firebase/app";
+import "firebase/auth";
+import JAVELIN_FIREBASE_CONFIG from "./javelin.json";
+
+export function initializeApp(): void {
+  const firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG
+    ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG)
+    : JAVELIN_FIREBASE_CONFIG;
+
+  firebase.initializeApp(firebaseConfig);
+}
