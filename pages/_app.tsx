@@ -1,9 +1,19 @@
 import * as React from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";
-import "../styles/main.scss";
+import "@/styles/main.scss";
+import firebase from "firebase/app";
+import JAVELIN_FIREBASE_CONFIG from "@/firebase-javelin.config.json";
+
+const firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG
+  ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG)
+  : JAVELIN_FIREBASE_CONFIG;
 
 export default function App({ Component, pageProps }: AppProps): JSX.Element {
+  React.useEffect(() => {
+    firebase.initializeApp(firebaseConfig);
+  });
+
   return (
     <>
       <Head>

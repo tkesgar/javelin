@@ -17,6 +17,7 @@
     "bootstrap": "^4.6.0",
     "bootswatch": "^4.6.0",
     "classnames": "^2.2.6",
+    "firebase": "^8.2.7",
     "next": "^10.0.7",
     "postcss-preset-env": "^6.7.0",
     "react": "^17.0.1",
