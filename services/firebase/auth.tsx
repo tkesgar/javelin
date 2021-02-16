@@ -31,8 +31,11 @@ export function AuthProvider({
       setAuth(user ? createAuth(user) : null);
     });
 
-    return () => unsubscribe();
-  });
+    return () => {
+      unsubscribe();
+      setAuth(false);
+    };
+  }, []);
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
