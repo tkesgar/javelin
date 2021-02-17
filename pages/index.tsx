@@ -1,12 +1,11 @@
 import * as React from "react";
-import AuthMenu from "@/features/auth/AuthMenu";
+import DefaultLayout from "@/components/DefaultLayout";
 
 export default function Index(): JSX.Element {
   return (
-    <>
+    <DefaultLayout>
       <h1>Hello world!</h1>
       <p>It works!</p>
-      <AuthMenu />
-    </>
+    </DefaultLayout>
   );
 }
