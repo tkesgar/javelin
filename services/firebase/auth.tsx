@@ -44,6 +44,14 @@ export function useAuth(): false | Auth {
   return React.useContext(AuthContext);
 }
 
+export function useAuthorize(
+  authorize = (auth: Auth) => Boolean(auth)
+): boolean {
+  const auth = useAuth();
+
+  return auth === false ? null : Boolean(auth) && authorize(auth);
+}
+
 export async function signIn(): Promise<Auth> {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope("email");

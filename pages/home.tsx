@@ -1,9 +1,9 @@
 import * as React from "react";
-import LandingPage from "@/features/landing-page/LandingPage";
+import HomePage from "@/features/home/HomePage";
 import { useAuthorize } from "@/services/firebase/auth";
 import { useRouter } from "next/dist/client/router";
 
-export default function Index(): JSX.Element {
+export default function Home(): JSX.Element {
   const router = useRouter();
   const isLogin = useAuthorize();
 
@@ -12,10 +12,10 @@ export default function Index(): JSX.Element {
       return;
     }
 
-    if (isLogin) {
-      router.replace("/home");
+    if (!isLogin) {
+      router.replace("/");
     }
   }, [isLogin, router]);
 
-  return <LandingPage />;
+  return isLogin ? <HomePage /> : null;
 }
