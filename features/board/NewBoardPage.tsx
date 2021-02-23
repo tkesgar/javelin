@@ -1,10 +1,12 @@
 import DefaultLayout from "@/components/DefaultLayout";
+import { useAuth, Auth } from "@/services/firebase/auth";
 import { createBoard } from "@/services/firebase/board";
 import { useRouter } from "next/router";
 import * as React from "react";
 import { Button, Container, Form } from "react-bootstrap";
 
 export default function NewBoardPage(): JSX.Element {
+  const auth = useAuth() as Auth;
   const router = useRouter();
 
   return (
@@ -14,7 +16,7 @@ export default function NewBoardPage(): JSX.Element {
         <NewBoardForm
           onSubmit={(value) => {
             (async () => {
-              const boardId = await createBoard(value);
+              const boardId = await createBoard(auth.uid, value);
               await router.push(`/board/${boardId}`);
             })().catch((error) => alert(error.message));
           }}

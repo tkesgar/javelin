@@ -1,7 +1,7 @@
 import * as React from "react";
 import firebase from "firebase/app";
 
-interface Auth {
+export interface Auth {
   uid: string;
   email: string;
   displayName: string;
