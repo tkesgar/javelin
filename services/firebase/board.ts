@@ -6,13 +6,13 @@ interface CreateBoardData {
   description: string;
 }
 
-interface Board {
+const db = () => firebase.firestore();
+
+export interface Board {
   id: string;
   title: string;
   description: string;
 }
-
-const db = () => firebase.firestore();
 
 export async function createBoard(
   uid: string,
@@ -30,7 +30,7 @@ export async function createBoard(
 }
 
 export function useBoard(id: string): Board {
-  const [board, setBoard] = React.useState<Board>(undefined);
+  const [board, setBoard] = React.useState<Board>();
 
   React.useEffect(() => {
     if (!id) {
@@ -50,4 +50,24 @@ export function useBoard(id: string): Board {
   }, [id]);
 
   return board;
+}
+
+export async function getMyBoards(uid: string): Promise<Board[]> {
+  const boards: Board[] = [];
+
+  const querySnapshot = await db()
+    .collection("boards")
+    .where("ownerId", "==", uid)
+    .get();
+
+  querySnapshot.forEach((result) => {
+    const data = result.data();
+    boards.push({
+      id: result.id,
+      description: data.description,
+      title: data.title,
+    });
+  });
+
+  return boards;
 }
