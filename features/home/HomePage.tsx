@@ -38,23 +38,30 @@ export default function HomePage(): JSX.Element {
               </Link>
             </>
           ) : (
-            myBoards.map((board) => (
-              <Card
-                key={board.id}
-                className="mb-3"
-                role="button"
-                onClick={() => {
-                  router.push(`/board/${board.id}`);
-                }}
-              >
-                <Card.Body>
-                  <Card.Title>{board.title}</Card.Title>
-                  {board.description && (
-                    <p className="text-muted">{board.description}</p>
-                  )}
-                </Card.Body>
-              </Card>
-            ))
+            <>
+              <Link href="/new/board" passHref>
+                <Button variant="primary" className="mb-3">
+                  Create a new board
+                </Button>
+              </Link>
+              {myBoards.map((board) => (
+                <Card
+                  key={board.id}
+                  className="mb-3"
+                  role="button"
+                  onClick={() => {
+                    router.push(`/board/${board.id}`);
+                  }}
+                >
+                  <Card.Body>
+                    <Card.Title>{board.title}</Card.Title>
+                    {board.description && (
+                      <p className="text-muted">{board.description}</p>
+                    )}
+                  </Card.Body>
+                </Card>
+              ))}
+            </>
           ))}
       </Container>
     </DefaultLayout>
