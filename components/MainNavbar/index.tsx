@@ -10,7 +10,7 @@ export default function MainNavbar(): JSX.Element {
 
   return (
     <Navbar bg="primary" variant="dark" className="py-2">
-      <Link href="/" passHref>
+      <Link href={auth ? "/home" : "/"} passHref>
         <Navbar.Brand>javelin</Navbar.Brand>
       </Link>
 

@@ -1,11 +1,6 @@
 import * as React from "react";
 import firebase from "firebase/app";
 
-interface CreateBoardData {
-  title: string;
-  description: string;
-}
-
 const db = () => firebase.firestore();
 
 export interface Board {
@@ -14,19 +9,36 @@ export interface Board {
   description: string;
 }
 
+interface CreateBoardData {
+  title: string;
+  description: string;
+  sectionTitles: string[];
+}
+
 export async function createBoard(
   uid: string,
   data: CreateBoardData
 ): Promise<string> {
-  const { title, description } = data;
+  const { title, description, sectionTitles } = data;
 
-  const ref = await db().collection("boards").add({
+  const batch = db().batch();
+
+  const boardRef = db().collection("boards").doc();
+  batch.set(boardRef, {
     title,
     description,
     ownerId: uid,
+    sectionCount: sectionTitles.length,
   });
 
-  return ref.id;
+  for (const [i, title] of sectionTitles.entries()) {
+    const sectionRef = boardRef.collection("sections").doc(`section${i + 1}`);
+    batch.set(sectionRef, { title });
+  }
+
+  await batch.commit();
+
+  return boardRef.id;
 }
 
 export function useBoard(id: string): Board {
