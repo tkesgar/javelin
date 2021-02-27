@@ -1,5 +1,6 @@
 import * as React from "react";
 import firebase from "firebase/app";
+import { createDebug } from "@/utils/log";
 
 const db = () => firebase.firestore();
 
@@ -20,6 +21,8 @@ interface CreateBoardData {
   description: string;
   sectionTitles: string[];
 }
+
+const debug = createDebug("firebase-board");
 
 export async function createBoard(
   uid: string,
@@ -43,6 +46,7 @@ export async function createBoard(
   }
 
   await batch.commit();
+  debug("created board");
 
   return boardRef.id;
 }
@@ -67,6 +71,7 @@ export function useBoard(boardId: string): Board {
             description: data.description,
             sectionCount: data.sectionCount,
           });
+          debug("read board snapshot");
         } else {
           setBoard(null);
         }
@@ -100,8 +105,9 @@ export function useBoardSections(boardId: string): Section[] {
         });
 
         setSections(newSections);
+        debug("read board sections snapshot");
       });
-  });
+  }, [boardId]);
 
   return sections;
 }
@@ -123,6 +129,7 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
       sectionCount: data.sectionCount,
     });
   });
+  debug("get my boards");
 
   return boards;
 }

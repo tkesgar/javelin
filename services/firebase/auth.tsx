@@ -1,5 +1,6 @@
 import * as React from "react";
 import firebase from "firebase/app";
+import { createDebug } from "@/utils/log";
 
 export interface Auth {
   uid: string;
@@ -7,6 +8,8 @@ export interface Auth {
   displayName: string;
   photoURL: string;
 }
+
+const debug = createDebug("firebase-auth");
 
 const AuthContext = React.createContext<false | Auth>(false);
 
@@ -29,6 +32,7 @@ export function AuthProvider({
   React.useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
       setAuth(user ? createAuth(user) : null);
+      debug("auth state changed");
     });
 
     return () => {
@@ -57,9 +61,12 @@ export async function signIn(): Promise<Auth> {
   provider.addScope("email");
 
   const credential = await firebase.auth().signInWithPopup(provider);
+  debug("sign in");
+
   return createAuth(credential.user);
 }
 
 export async function signOut(): Promise<void> {
   await firebase.auth().signOut();
+  debug("sign out");
 }
