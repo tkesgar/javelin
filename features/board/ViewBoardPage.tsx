@@ -1,10 +1,9 @@
-import DefaultLayout from "@/components/DefaultLayout";
 import { useBoard, useBoardSections } from "@/services/firebase/board";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
 import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
-import { Settings } from "react-feather";
+import { Plus, Settings } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
@@ -57,11 +56,14 @@ export default function ViewBoardPage(): JSX.Element {
                       >
                         {section.title}
                       </h2>
-                      <div className="bg-light mt-5 py-5">Hello world!</div>
-                      <div className="bg-light mt-5 py-5">Hello world!</div>
-                      <div className="bg-light mt-5 py-5">Hello world!</div>
-                      <div className="bg-light mt-5 py-5">Hello world!</div>
-                      <div className="bg-light mt-5 py-5">Hello world!</div>
+                      <Button type="button" size="sm" block className="mb-3">
+                        <Plus size="16" />
+                      </Button>
+                      <div className="bg-light mb-3 py-5">Hello world!</div>
+                      <div className="bg-light mb-3 py-5">Hello world!</div>
+                      <div className="bg-light mb-3 py-5">Hello world!</div>
+                      <div className="bg-light mb-3 py-5">Hello world!</div>
+                      <div className="bg-light py-5">Hello world!</div>
                     </Col>
                   ))}
                 </Row>

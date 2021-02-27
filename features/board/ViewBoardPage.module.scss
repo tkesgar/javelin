@@ -1,12 +1,20 @@
 @import "../../styles/includes";
 
+@mixin line-clamp($amount: 1) {
+  // https://css-tricks.com/almanac/properties/l/line-clamp/
+  display: -webkit-box;
+  -webkit-line-clamp: $amount;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .Viewport {
   overflow-x: auto;
 }
 
 .Container {
   $section-min-width: 15rem;
-  $section-max-width: 17.5rem;
+  $section-max-width: 20rem;
   $section-spacing: $grid-gutter-width;
 
   @mixin generate-width($column-count) {
@@ -30,8 +38,5 @@
 
 .SectionTitle {
   // https://css-tricks.com/almanac/properties/l/line-clamp/
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  @include line-clamp(1);
 }
