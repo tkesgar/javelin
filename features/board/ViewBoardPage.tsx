@@ -1,4 +1,10 @@
-import { useBoard, useBoardSections } from "@/services/firebase/board";
+import {
+  createCard,
+  removeCard,
+  useBoard,
+  useBoardCards,
+  useBoardSections,
+} from "@/services/firebase/board";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
@@ -12,6 +18,7 @@ export default function ViewBoardPage(): JSX.Element {
   const router = useRouter();
   const board = useBoard(router.query.boardId as string);
   const sections = useBoardSections(router.query.boardId as string);
+  const sectionCards = useBoardCards(router.query.boardId as string);
 
   return (
     <div className="min-vh-100 d-flex flex-column">
@@ -56,14 +63,37 @@ export default function ViewBoardPage(): JSX.Element {
                       >
                         {section.title}
                       </h2>
-                      <Button type="button" size="sm" block className="mb-3">
+                      <Button
+                        type="button"
+                        size="sm"
+                        block
+                        className="mb-3"
+                        onClick={() => {
+                          createCard({
+                            boardId: board.id,
+                            sectionId: section.id,
+                          }).catch((error) => alert(error.message));
+                        }}
+                      >
                         <Plus size="16" />
                       </Button>
-                      <div className="bg-light mb-3 py-5">Hello world!</div>
-                      <div className="bg-light mb-3 py-5">Hello world!</div>
-                      <div className="bg-light mb-3 py-5">Hello world!</div>
-                      <div className="bg-light mb-3 py-5">Hello world!</div>
-                      <div className="bg-light py-5">Hello world!</div>
+                      {(sectionCards?.[section.id] || []).map((card) => (
+                        <div key={card.id} className="bg-light mb-3 py-5">
+                          Hello world!
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              removeCard(
+                                board.id,
+                                section.id,
+                                card.id
+                              ).catch((error) => alert(error.message));
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
                     </Col>
                   ))}
                 </Row>

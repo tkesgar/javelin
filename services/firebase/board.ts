@@ -16,40 +16,12 @@ export interface Section {
   title: string;
 }
 
-interface CreateBoardData {
-  title: string;
-  description: string;
-  sectionTitles: string[];
+export interface Card {
+  id: string;
+  sectionId: string;
 }
 
 const debug = createDebug("firebase-board");
-
-export async function createBoard(
-  uid: string,
-  data: CreateBoardData
-): Promise<string> {
-  const { title, description, sectionTitles } = data;
-
-  const batch = db().batch();
-
-  const boardRef = db().collection("boards").doc();
-  batch.set(boardRef, {
-    title,
-    description,
-    ownerId: uid,
-    sectionCount: sectionTitles.length,
-  });
-
-  for (const [i, title] of sectionTitles.entries()) {
-    const sectionRef = boardRef.collection("sections").doc(`section${i + 1}`);
-    batch.set(sectionRef, { title });
-  }
-
-  await batch.commit();
-  debug("created board");
-
-  return boardRef.id;
-}
 
 export function useBoard(boardId: string): Board {
   const [board, setBoard] = React.useState<Board>();
@@ -112,6 +84,54 @@ export function useBoardSections(boardId: string): Section[] {
   return sections;
 }
 
+export function useBoardCards(boardId: string): Record<string, Card[]> {
+  const [sectionCards, setSectionCards] = React.useState<
+    Record<string, Card[]>
+  >({});
+
+  React.useEffect(() => {
+    if (!boardId) {
+      return;
+    }
+
+    const unsubscribes: (() => void)[] = [
+      db()
+        .collection("boards")
+        .doc(boardId)
+        .collection("sections")
+        .onSnapshot((querySectionSnapshot) => {
+          querySectionSnapshot.forEach((sectionResult) => {
+            unsubscribes.push(
+              sectionResult.ref
+                .collection("cards")
+                .onSnapshot((queryCardSnapshot) => {
+                  const newCards: Card[] = [];
+
+                  queryCardSnapshot.forEach((cardResult) => {
+                    newCards.push({
+                      id: cardResult.id,
+                      sectionId: sectionResult.id,
+                    });
+                  });
+
+                  setSectionCards((oldSectionCards) => ({
+                    ...oldSectionCards,
+                    [sectionResult.id]: newCards,
+                  }));
+                  debug("read cards snapshot");
+                })
+            );
+          });
+          debug("read sections snapshot");
+        }),
+    ];
+
+    return () => unsubscribes.forEach((fn) => fn());
+  }, [boardId]);
+
+  return sectionCards;
+}
+
 export async function getMyBoards(uid: string): Promise<Board[]> {
   const boards: Board[] = [];
 
@@ -132,4 +152,72 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
   debug("get my boards");
 
   return boards;
+}
+
+interface CreateBoardData {
+  title: string;
+  description: string;
+  sectionTitles: string[];
+}
+
+export async function createBoard(
+  uid: string,
+  data: CreateBoardData
+): Promise<string> {
+  const { title, description, sectionTitles } = data;
+
+  const batch = db().batch();
+
+  const boardRef = db().collection("boards").doc();
+  batch.set(boardRef, {
+    title,
+    description,
+    ownerId: uid,
+    sectionCount: sectionTitles.length,
+  });
+
+  for (const [i, title] of sectionTitles.entries()) {
+    const sectionRef = boardRef.collection("sections").doc(`section${i + 1}`);
+    batch.set(sectionRef, { title });
+  }
+
+  await batch.commit();
+  debug("created board");
+
+  return boardRef.id;
+}
+
+interface CreateCardData {
+  boardId: string;
+  sectionId: string;
+}
+
+export async function createCard({
+  boardId,
+  sectionId,
+}: CreateCardData): Promise<string> {
+  const ref = await db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(sectionId)
+    .collection("cards")
+    .add({});
+
+  return ref.id;
+}
+
+export async function removeCard(
+  boardId: string,
+  sectionId: string,
+  cardId: string
+): Promise<void> {
+  await db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(sectionId)
+    .collection("cards")
+    .doc(cardId)
+    .delete();
 }
