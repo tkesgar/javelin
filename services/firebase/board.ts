@@ -113,14 +113,14 @@ export function useBoardCards(boardId: string): Record<string, Card[]> {
                   queryCardSnapshot.forEach((cardResult) => {
                     const data = cardResult.data();
 
-                    // Timestamps can be null if from cache.
+                    // Timestamps can be null if data is from cache.
+                    // Here we use an approximation Date.now(), since it is
+                    // probably the state when the card is first created.
                     const timeCreated = data.timeCreated
-                      ? data.timeCreated.seconds * 1000 +
-                        Math.trunc(data.timeCreated.nanoseconds / 1000000)
+                      ? timestampToMiliseconds(data.timeCreated)
                       : Date.now();
                     const timeUpdated = data.timeUpdated
-                      ? data.timeUpdated.seconds * 1000 +
-                        Math.trunc(data.timeUpdated.nanoseconds / 1000000)
+                      ? timestampToMiliseconds(data.timeUpdated)
                       : Date.now();
 
                     newCards.push({
@@ -268,4 +268,63 @@ export async function updateCard(data: UpdateCardData): Promise<void> {
       timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
     });
   debug("updated card");
+}
+
+interface UpdateCardSectionData {
+  boardId: string;
+  sectionId: string;
+  cardId: string;
+  newSectionId: string;
+}
+
+export async function updateCardSection(
+  data: UpdateCardSectionData
+): Promise<void> {
+  const { boardId, sectionId, cardId, newSectionId } = data;
+
+  const cardSnapshot = await db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(sectionId)
+    .collection("cards")
+    .doc(cardId)
+    .get();
+  const cardData = cardSnapshot.data();
+
+  const batch = db().batch();
+
+  const oldCardRef = db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(sectionId)
+    .collection("cards")
+    .doc(cardId);
+  batch.delete(oldCardRef);
+
+  const newCardRef = db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(newSectionId)
+    .collection("cards")
+    .doc(cardId);
+  batch.set(newCardRef, {
+    content: cardData.content,
+    timeCreated: cardData.timeCreated,
+    timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+
+  await batch.commit();
+  debug("updated card section");
+}
+
+function timestampToMiliseconds(timestamp: {
+  seconds: number;
+  nanoseconds: number;
+}): number {
+  const { seconds, nanoseconds } = timestamp;
+
+  return seconds * 1000 + Math.trunc(nanoseconds / 1000000);
 }

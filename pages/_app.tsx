@@ -4,6 +4,10 @@ import { AppProps } from "next/app";
 import "@/styles/main.scss";
 import { AuthProvider } from "@/services/firebase/auth";
 import { initializeApp } from "@/services/firebase";
+import * as day from "dayjs";
+import RelativeTime from "dayjs/plugin/relativeTime";
+
+day.extend(RelativeTime);
 
 if (typeof window !== "undefined") {
   initializeApp();

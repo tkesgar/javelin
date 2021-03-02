@@ -2,6 +2,7 @@ import {
   createCard,
   removeCard,
   updateCard,
+  updateCardSection,
   useBoard,
   useBoardCards,
   useBoardSections,
@@ -10,16 +11,27 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
 import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
-import { Plus, Settings, Trash2 } from "react-feather";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Settings,
+  Trash2,
+} from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
+import day from "dayjs";
 
 export default function ViewBoardPage(): JSX.Element {
   const router = useRouter();
   const board = useBoard(router.query.boardId as string);
   const sections = useBoardSections(router.query.boardId as string);
   const sectionCards = useBoardCards(router.query.boardId as string);
+
+  function sectionIndex(sectionId: string): number {
+    return sections.findIndex((section) => section.id === sectionId);
+  }
 
   return (
     <div className="min-vh-100 d-flex flex-column">
@@ -44,7 +56,7 @@ export default function ViewBoardPage(): JSX.Element {
               </div>
             </Container>
           </div>
-          <div className={classnames(style.Viewport, "flex-fill")}>
+          <div className={classnames(style.Viewport, "border-top flex-fill")}>
             <div
               className={classnames(
                 style.Container,
@@ -78,42 +90,102 @@ export default function ViewBoardPage(): JSX.Element {
                       >
                         <Plus size="16" />
                       </Button>
-                      {(sectionCards?.[section.id] || []).map((card) => (
-                        <div
-                          key={card.id}
-                          className={classnames(style.Card, "mb-3 p-2")}
-                        >
-                          <EditableContent
-                            className={classnames(style.CardContent, "mb-2")}
-                            initialText={card.content}
-                            onChange={(text) => {
-                              updateCard({
-                                boardId: board.id,
-                                sectionId: section.id,
-                                cardId: card.id,
-                                content: text,
-                              }).catch((error) => alert(error.message));
-                            }}
-                          />
-                          <div className="text-right">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="danger"
-                              onClick={() => {
-                                removeCard(
-                                  board.id,
-                                  section.id,
-                                  card.id
-                                ).catch((error) => alert(error.message));
-                              }}
-                            >
-                              <Trash2 size="16" />
-                              <span className="sr-only">Remove</span>
-                            </Button>
+                      {(sectionCards?.[section.id] || [])
+                        .sort(
+                          (cardA, cardB) =>
+                            cardB.timeCreated - cardA.timeCreated
+                        )
+                        .map((card) => (
+                          <div
+                            key={card.id}
+                            className={classnames(style.Card, "mb-3 py-2")}
+                          >
+                            <div className="d-flex align-items-center mb-2">
+                              <Button
+                                type="button"
+                                variant="light"
+                                size="sm"
+                                className={classnames(
+                                  "bg-transparent border-0 p-0 ml-1 mr-2",
+                                  sectionIndex(section.id) === 0 && "invisible"
+                                )}
+                                onClick={() => {
+                                  updateCardSection({
+                                    boardId: board.id,
+                                    sectionId: section.id,
+                                    cardId: card.id,
+                                    newSectionId:
+                                      sections[sectionIndex(section.id) - 1].id,
+                                  }).catch((error) => alert(error.message));
+                                }}
+                              >
+                                <ChevronLeft size="16" />
+                              </Button>
+                              <div className="flex-fill">
+                                <EditableContent
+                                  className={classnames(
+                                    style.CardContent,
+                                    "mb-2"
+                                  )}
+                                  initialText={card.content}
+                                  onChange={(text) => {
+                                    updateCard({
+                                      boardId: board.id,
+                                      sectionId: section.id,
+                                      cardId: card.id,
+                                      content: text,
+                                    }).catch((error) => alert(error.message));
+                                  }}
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="light"
+                                size="sm"
+                                className={classnames(
+                                  "bg-transparent border-0 p-0 ml-2 mr-1",
+                                  sectionIndex(section.id) ===
+                                    sections.length - 1 && "invisible"
+                                )}
+                                onClick={() => {
+                                  updateCardSection({
+                                    boardId: board.id,
+                                    sectionId: section.id,
+                                    cardId: card.id,
+                                    newSectionId:
+                                      sections[sectionIndex(section.id) + 1].id,
+                                  }).catch((error) => alert(error.message));
+                                }}
+                              >
+                                <ChevronRight size="16" />
+                              </Button>
+                            </div>
+                            <div className="d-flex align-items-end mx-2">
+                              <div className="flex-fill">
+                                <small className="text-muted">
+                                  {day().diff(card.timeUpdated, "m")}m ago
+                                </small>
+                              </div>
+                              <div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="danger"
+                                  onClick={() => {
+                                    removeCard(
+                                      board.id,
+                                      section.id,
+                                      card.id
+                                    ).catch((error) => alert(error.message));
+                                  }}
+                                >
+                                  <Trash2 size="16" />
+                                  <span className="sr-only">Remove</span>
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </Col>
                   ))}
                 </Row>
@@ -133,16 +205,20 @@ export default function ViewBoardPage(): JSX.Element {
 
 type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
   initialText?: string;
+  placeholder?: string;
   onChange?: (text: string) => void;
 };
 
 function EditableContent({
   initialText = "",
+  placeholder = null,
   onChange,
+  className,
   ...restProps
 }: EditableContentProps): JSX.Element {
   const divRef = React.useRef<HTMLDivElement>();
-  const [currentText, setCurrentText] = React.useState(initialText);
+  const [text, setText] = React.useState(initialText);
+  const [lastChangeText, setLastChangeText] = React.useState(initialText);
 
   React.useEffect(() => {
     if (!divRef.current) {
@@ -154,18 +230,32 @@ function EditableContent({
 
   return (
     <div
+      className={classnames(style.EditableContentContainer, className)}
       {...restProps}
-      ref={divRef}
-      contentEditable
-      onBlur={() => {
-        if (onChange) {
-          const text = divRef.current.innerText;
-          if (text !== currentText) {
-            setCurrentText(text);
-            onChange(text);
+    >
+      {placeholder && text.length === 0 ? (
+        <div
+          className={classnames(style.EditableContentPlaceholder, "text-muted")}
+        >
+          {placeholder}
+        </div>
+      ) : null}
+      <div
+        ref={divRef}
+        contentEditable
+        onInput={(evt) => {
+          setText(divRef.current.innerText);
+        }}
+        onBlur={() => {
+          if (onChange) {
+            const currentText = divRef.current.innerText;
+            if (currentText !== lastChangeText) {
+              setLastChangeText(currentText);
+              onChange(currentText);
+            }
           }
-        }
-      }}
-    />
+        }}
+      />
+    </div>
   );
 }

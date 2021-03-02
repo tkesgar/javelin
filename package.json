@@ -17,6 +17,7 @@
     "bootstrap": "^4.6.0",
     "bootswatch": "^4.6.0",
     "classnames": "^2.2.6",
+    "dayjs": "^1.10.4",
     "debug": "^4.3.1",
     "firebase": "^8.2.7",
     "next": "^10.0.7",

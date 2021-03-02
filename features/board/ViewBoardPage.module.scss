@@ -46,6 +46,20 @@
 }
 
 .CardContent {
+  font-size: 16px;
   font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
     "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
+  min-height: 2rem;
+}
+
+.EditableContentContainer {
+  position: relative;
+}
+
+.EditableContentPlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
 }
