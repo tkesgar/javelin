@@ -19,6 +19,9 @@ export interface Section {
 export interface Card {
   id: string;
   sectionId: string;
+  content: string;
+  timeCreated: number;
+  timeUpdated: number;
 }
 
 const debug = createDebug("firebase-board");
@@ -108,9 +111,24 @@ export function useBoardCards(boardId: string): Record<string, Card[]> {
                   const newCards: Card[] = [];
 
                   queryCardSnapshot.forEach((cardResult) => {
+                    const data = cardResult.data();
+
+                    // Timestamps can be null if from cache.
+                    const timeCreated = data.timeCreated
+                      ? data.timeCreated.seconds * 1000 +
+                        Math.trunc(data.timeCreated.nanoseconds / 1000000)
+                      : Date.now();
+                    const timeUpdated = data.timeUpdated
+                      ? data.timeUpdated.seconds * 1000 +
+                        Math.trunc(data.timeUpdated.nanoseconds / 1000000)
+                      : Date.now();
+
                     newCards.push({
                       id: cardResult.id,
                       sectionId: sectionResult.id,
+                      content: data.content,
+                      timeCreated,
+                      timeUpdated,
                     });
                   });
 
@@ -202,7 +220,12 @@ export async function createCard({
     .collection("sections")
     .doc(sectionId)
     .collection("cards")
-    .add({});
+    .add({
+      content: "",
+      timeCreated: firebase.firestore.FieldValue.serverTimestamp(),
+      timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  debug("created card");
 
   return ref.id;
 }
@@ -220,4 +243,29 @@ export async function removeCard(
     .collection("cards")
     .doc(cardId)
     .delete();
+  debug("removed card");
+}
+
+interface UpdateCardData {
+  boardId: string;
+  sectionId: string;
+  cardId: string;
+  content: string;
+}
+
+export async function updateCard(data: UpdateCardData): Promise<void> {
+  const { boardId, sectionId, cardId, content } = data;
+
+  await db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("sections")
+    .doc(sectionId)
+    .collection("cards")
+    .doc(cardId)
+    .update({
+      content,
+      timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  debug("updated card");
 }

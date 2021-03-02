@@ -1,6 +1,7 @@
 import {
   createCard,
   removeCard,
+  updateCard,
   useBoard,
   useBoardCards,
   useBoardSections,
@@ -9,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
 import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
-import { Plus, Settings } from "react-feather";
+import { Plus, Settings, Trash2 } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
@@ -78,20 +79,39 @@ export default function ViewBoardPage(): JSX.Element {
                         <Plus size="16" />
                       </Button>
                       {(sectionCards?.[section.id] || []).map((card) => (
-                        <div key={card.id} className="bg-light mb-3 py-5">
-                          Hello world!
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              removeCard(
-                                board.id,
-                                section.id,
-                                card.id
-                              ).catch((error) => alert(error.message));
+                        <div
+                          key={card.id}
+                          className={classnames(style.Card, "mb-3 p-2")}
+                        >
+                          <EditableContent
+                            className={classnames(style.CardContent, "mb-2")}
+                            initialText={card.content}
+                            onChange={(text) => {
+                              updateCard({
+                                boardId: board.id,
+                                sectionId: section.id,
+                                cardId: card.id,
+                                content: text,
+                              }).catch((error) => alert(error.message));
                             }}
-                          >
-                            Remove
-                          </Button>
+                          />
+                          <div className="text-right">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              onClick={() => {
+                                removeCard(
+                                  board.id,
+                                  section.id,
+                                  card.id
+                                ).catch((error) => alert(error.message));
+                              }}
+                            >
+                              <Trash2 size="16" />
+                              <span className="sr-only">Remove</span>
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </Col>
@@ -108,5 +128,44 @@ export default function ViewBoardPage(): JSX.Element {
         />
       )}
     </div>
+  );
+}
+
+type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
+  initialText?: string;
+  onChange?: (text: string) => void;
+};
+
+function EditableContent({
+  initialText = "",
+  onChange,
+  ...restProps
+}: EditableContentProps): JSX.Element {
+  const divRef = React.useRef<HTMLDivElement>();
+  const [currentText, setCurrentText] = React.useState(initialText);
+
+  React.useEffect(() => {
+    if (!divRef.current) {
+      return;
+    }
+
+    divRef.current.textContent = initialText;
+  }, [initialText]);
+
+  return (
+    <div
+      {...restProps}
+      ref={divRef}
+      contentEditable
+      onBlur={() => {
+        if (onChange) {
+          const text = divRef.current.innerText;
+          if (text !== currentText) {
+            setCurrentText(text);
+            onChange(text);
+          }
+        }
+      }}
+    />
   );
 }

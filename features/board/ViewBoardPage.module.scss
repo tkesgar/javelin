@@ -40,3 +40,12 @@
   // https://css-tricks.com/almanac/properties/l/line-clamp/
   @include line-clamp(1);
 }
+
+.Card {
+  background-color: #ffefc1;
+}
+
+.CardContent {
+  font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
+    "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
+}
