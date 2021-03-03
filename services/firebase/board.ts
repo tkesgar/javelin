@@ -1,6 +1,7 @@
 import * as React from "react";
 import firebase from "firebase/app";
 import { createDebug } from "@/utils/log";
+import { Auth } from "./auth";
 
 const db = () => firebase.firestore();
 
@@ -11,6 +12,12 @@ export interface Board {
   sectionCount: number;
 }
 
+export interface User {
+  id: string;
+  displayName: string;
+  photoURL: string;
+}
+
 export interface Section {
   id: string;
   title: string;
@@ -19,6 +26,7 @@ export interface Section {
 export interface Card {
   id: string;
   sectionId: string;
+  userId: string;
   content: string;
   timeCreated: number;
   timeUpdated: number;
@@ -87,6 +95,38 @@ export function useBoardSections(boardId: string): Section[] {
   return sections;
 }
 
+export function useBoardUsers(boardId: string): User[] {
+  const [users, setUsers] = React.useState<User[]>();
+
+  React.useEffect(() => {
+    if (!boardId) {
+      return;
+    }
+
+    return db()
+      .collection("boards")
+      .doc(boardId)
+      .collection("users")
+      .onSnapshot((querySnapshot) => {
+        const newUsers: typeof users = [];
+
+        querySnapshot.forEach((result) => {
+          const data = result.data();
+          newUsers.push({
+            id: result.id,
+            displayName: data.displayName,
+            photoURL: data.photoURL,
+          });
+        });
+
+        setUsers(newUsers);
+        debug("read board users snapshot");
+      });
+  }, [boardId]);
+
+  return users;
+}
+
 export function useBoardCards(boardId: string): Record<string, Card[]> {
   const [sectionCards, setSectionCards] = React.useState<
     Record<string, Card[]>
@@ -126,6 +166,7 @@ export function useBoardCards(boardId: string): Record<string, Card[]> {
                     newCards.push({
                       id: cardResult.id,
                       sectionId: sectionResult.id,
+                      userId: data.userId,
                       content: data.content,
                       timeCreated,
                       timeUpdated,
@@ -208,11 +249,13 @@ export async function createBoard(
 interface CreateCardData {
   boardId: string;
   sectionId: string;
+  userId: string;
 }
 
 export async function createCard({
   boardId,
   sectionId,
+  userId,
 }: CreateCardData): Promise<string> {
   const ref = await db()
     .collection("boards")
@@ -221,6 +264,7 @@ export async function createCard({
     .doc(sectionId)
     .collection("cards")
     .add({
+      userId,
       content: "",
       timeCreated: firebase.firestore.FieldValue.serverTimestamp(),
       timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
@@ -314,10 +358,27 @@ export async function updateCardSection(
     content: cardData.content,
     timeCreated: cardData.timeCreated,
     timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    userId: cardData.userId,
   });
 
   await batch.commit();
   debug("updated card section");
+}
+
+export async function updateBoardUserFromAuth(
+  boardId: string,
+  auth: Auth
+): Promise<void> {
+  await db()
+    .collection("boards")
+    .doc(boardId)
+    .collection("users")
+    .doc(auth.uid)
+    .set({
+      displayName: auth.displayName,
+      photoURL: auth.photoURL,
+    });
+  debug("update board user from auth");
 }
 
 function timestampToMiliseconds(timestamp: {

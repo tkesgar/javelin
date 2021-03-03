@@ -1,11 +1,13 @@
 import {
   createCard,
   removeCard,
+  updateBoardUserFromAuth,
   updateCard,
   updateCardSection,
   useBoard,
   useBoardCards,
   useBoardSections,
+  useBoardUsers,
 } from "@/services/firebase/board";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -22,12 +24,29 @@ import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
 import day from "dayjs";
+import { Auth, useAuth } from "@/services/firebase/auth";
 
 export default function ViewBoardPage(): JSX.Element {
+  const auth = useAuth() as Auth;
   const router = useRouter();
   const board = useBoard(router.query.boardId as string);
   const sections = useBoardSections(router.query.boardId as string);
   const sectionCards = useBoardCards(router.query.boardId as string);
+  const users = useBoardUsers(router.query.boardId as string);
+
+  React.useEffect(() => {
+    const boardId = router.query.boardId as string;
+    if (!boardId || !users || !auth) {
+      return;
+    }
+
+    const currentUser = users.find((user) => user.id === auth.uid);
+    if (!currentUser) {
+      updateBoardUserFromAuth(boardId, auth).catch((error) =>
+        console.error(error)
+      );
+    }
+  }, [router, auth, users]);
 
   function sectionIndex(sectionId: string): number {
     return sections.findIndex((section) => section.id === sectionId);
@@ -85,6 +104,7 @@ export default function ViewBoardPage(): JSX.Element {
                           createCard({
                             boardId: board.id,
                             sectionId: section.id,
+                            userId: auth.uid,
                           }).catch((error) => alert(error.message));
                         }}
                       >
@@ -164,6 +184,30 @@ export default function ViewBoardPage(): JSX.Element {
                               <div className="flex-fill">
                                 <small className="text-muted">
                                   {day().diff(card.timeUpdated, "m")}m ago
+                                  {(() => {
+                                    const cardUser = users.find(
+                                      (user) => user.id === card.userId
+                                    );
+                                    if (!cardUser) {
+                                      return null;
+                                    }
+
+                                    return (
+                                      <>
+                                        {" "}
+                                        by{" "}
+                                        <img
+                                          src={cardUser.photoURL}
+                                          alt={cardUser.displayName}
+                                          title={cardUser.displayName}
+                                          className={classnames(
+                                            style.CardUserAvatar,
+                                            "d-inline-block rounded-circle"
+                                          )}
+                                        />
+                                      </>
+                                    );
+                                  })()}
                                 </small>
                               </div>
                               <div>
@@ -243,9 +287,7 @@ function EditableContent({
       <div
         ref={divRef}
         contentEditable
-        onInput={(evt) => {
-          setText(divRef.current.innerText);
-        }}
+        onInput={() => setText(divRef.current.innerText)}
         onBlur={() => {
           if (onChange) {
             const currentText = divRef.current.innerText;
