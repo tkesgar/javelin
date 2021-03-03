@@ -44,7 +44,7 @@ export default function ViewBoardPage(): JSX.Element {
   const board = useBoard(router.query.boardId as string);
   const sections = useBoardSections(router.query.boardId as string);
   const sectionCards = useBoardCards(router.query.boardId as string);
-  const users = useBoardUsers(router.query.boardId as string);
+  const users = useBoardUsers(auth && (router.query.boardId as string));
   const [showSettings, setShowSettings] = React.useState(false);
 
   React.useEffect(() => {
@@ -79,13 +79,15 @@ export default function ViewBoardPage(): JSX.Element {
                     <div className="text-muted mb-3">{board.description}</div>
                   </div>
                   <div className="ml-3">
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowSettings(true)}
-                    >
-                      <Settings size="16" />
-                      <span className="sr-only">Settings</span>
-                    </Button>
+                    {auth ? (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowSettings(true)}
+                      >
+                        <Settings size="16" />
+                        <span className="sr-only">Settings</span>
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               </Container>
@@ -150,7 +152,7 @@ export default function ViewBoardPage(): JSX.Element {
                                 boardId={board.id}
                                 sectionId={section.id}
                                 user={
-                                  users.find(
+                                  users?.find(
                                     (user) => user.id === card.userId
                                   ) || null
                                 }
@@ -447,15 +449,17 @@ function BoardCard({
       </div>
       <div className="d-flex align-items-end mx-2">
         <div className="flex-fill">
-          <img
-            src={user.photoURL}
-            alt={user.displayName}
-            title={user.displayName}
-            className={classnames(
-              style.CardUserAvatar,
-              "d-inline-block rounded-circle"
-            )}
-          />{" "}
+          {user ? (
+            <img
+              src={user.photoURL}
+              alt={user.displayName}
+              title={user.displayName}
+              className={classnames(
+                style.CardUserAvatar,
+                "d-inline-block rounded-circle mr-1"
+              )}
+            />
+          ) : null}
           <small className="text-muted">{cardTime}</small>
         </div>
         <div>

@@ -94,7 +94,7 @@ export function useBoardSections(boardId: string): Section[] {
   return sections;
 }
 
-export function useBoardUsers(boardId: string): User[] {
+export function useBoardUsers(boardId: string | false): User[] {
   const [users, setUsers] = React.useState<User[]>();
 
   React.useEffect(() => {
