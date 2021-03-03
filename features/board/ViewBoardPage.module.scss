@@ -55,6 +55,9 @@
 .CardUserAvatar {
   width: 1rem;
   height: 1rem;
+
+  // Prevent alt text from overflowing the img component if image fails to load.
+  overflow: hidden;
 }
 
 .EditableContentContainer {
