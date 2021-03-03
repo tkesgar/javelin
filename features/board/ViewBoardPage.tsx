@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import * as React from "react";
 import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
 import {
+  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -175,16 +176,30 @@ export default function ViewBoardPage(): JSX.Element {
   );
 }
 
+function processText(
+  text: string
+): {
+  tags: string[];
+  html: string;
+} {
+  return {
+    tags: [...(text.match(/#\w+/g) || [])],
+    html: text.replace(/#(\w+)/g, '<span class="Label Label-$1">#$1</span>'),
+  };
+}
+
 type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
   initialText?: string;
   placeholder?: string;
   onChange?: (text: string) => void;
+  onTags?: (tags: string[]) => void;
 };
 
 function EditableContent({
   initialText = "",
   placeholder = null,
   onChange,
+  onTags,
   className,
   ...restProps
 }: EditableContentProps): JSX.Element {
@@ -197,8 +212,28 @@ function EditableContent({
       return;
     }
 
-    divRef.current.textContent = initialText;
-  }, [initialText]);
+    const { tags, html } = processText(initialText);
+
+    if (onTags) {
+      onTags(tags);
+    }
+
+    divRef.current.innerHTML = html;
+  }, [onTags, initialText]);
+
+  React.useEffect(() => {
+    if (!divRef.current) {
+      return;
+    }
+
+    const { tags, html } = processText(lastChangeText);
+
+    if (onTags) {
+      onTags(tags);
+    }
+
+    divRef.current.innerHTML = html;
+  }, [onTags, lastChangeText]);
 
   return (
     <div
@@ -248,6 +283,23 @@ function BoardCard({
   user,
   ...restProps
 }: BoardCardProps): JSX.Element {
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [tags, setTags] = React.useState<string[]>([]);
+
+  const onTagsCallback = React.useCallback((tags) => setTags(tags), []);
+
+  React.useEffect(() => {
+    if (!confirmDelete) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setConfirmDelete(false);
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, [confirmDelete]);
+
   return (
     <div {...restProps}>
       <div className="d-flex align-items-center mb-2">
@@ -275,6 +327,7 @@ function BoardCard({
                 content: text,
               }).catch((error) => alert(error.message));
             }}
+            onTags={onTagsCallback}
           />
         </div>
         <Button
@@ -315,15 +368,35 @@ function BoardCard({
           <Button
             type="button"
             size="sm"
-            variant="danger"
+            variant={confirmDelete ? "danger" : "warning"}
+            className="rounded-circle px-0"
+            style={{ width: "28px" }}
             onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                return;
+              }
+
               removeCard(boardId, sectionId, card.id).catch((error) =>
                 alert(error.message)
               );
             }}
+            onContextMenu={(evt) => {
+              evt.preventDefault();
+              setConfirmDelete(false);
+            }}
           >
-            <Trash2 size="16" />
-            <span className="sr-only">Remove</span>
+            {confirmDelete ? (
+              <>
+                <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
+                <span className="sr-only">Are you sure?</span>
+              </>
+            ) : (
+              <>
+                <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
+                <span className="sr-only">Remove</span>
+              </>
+            )}
           </Button>
         </div>
       </div>

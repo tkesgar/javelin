@@ -68,3 +68,8 @@
   width: 100%;
   pointer-events: none;
 }
+
+.EditableContentContainer :global(.Label) {
+  padding: 0.1rem 0.2rem;
+  font-weight: 700;
+}
