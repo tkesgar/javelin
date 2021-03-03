@@ -82,7 +82,7 @@ function NewBoardForm({ onSubmit }: NewBoardFormProps): JSX.Element {
         />
       </Form.Group>
       <Form.Group controlId="createBoard_description" className="my-3">
-        <Form.Label srOnly>Title</Form.Label>
+        <Form.Label srOnly>Description</Form.Label>
         <Form.Control
           as="textarea"
           rows={3}
