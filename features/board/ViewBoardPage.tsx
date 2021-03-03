@@ -1,4 +1,5 @@
 import {
+  Card,
   createCard,
   removeCard,
   updateBoardUserFromAuth,
@@ -8,6 +9,7 @@ import {
   useBoardCards,
   useBoardSections,
   useBoardUsers,
+  User,
 } from "@/services/firebase/board";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -48,7 +50,7 @@ export default function ViewBoardPage(): JSX.Element {
     }
   }, [router, auth, users]);
 
-  function sectionIndex(sectionId: string): number {
+  function getSectionIndex(sectionId: string): number {
     return sections.findIndex((section) => section.id === sectionId);
   }
 
@@ -115,121 +117,47 @@ export default function ViewBoardPage(): JSX.Element {
                           (cardA, cardB) =>
                             cardB.timeCreated - cardA.timeCreated
                         )
-                        .map((card) => (
-                          <div
-                            key={card.id}
-                            className={classnames(style.Card, "mb-3 py-2")}
-                          >
-                            <div className="d-flex align-items-center mb-2">
-                              <Button
-                                type="button"
-                                variant="light"
-                                size="sm"
-                                className={classnames(
-                                  "bg-transparent border-0 p-0 ml-1 mr-2",
-                                  sectionIndex(section.id) === 0 && "invisible"
-                                )}
-                                onClick={() => {
-                                  updateCardSection({
-                                    boardId: board.id,
-                                    sectionId: section.id,
-                                    cardId: card.id,
-                                    newSectionId:
-                                      sections[sectionIndex(section.id) - 1].id,
-                                  }).catch((error) => alert(error.message));
-                                }}
-                              >
-                                <ChevronLeft size="16" />
-                              </Button>
-                              <div className="flex-fill">
-                                <EditableContent
-                                  className={classnames(
-                                    style.CardContent,
-                                    "mb-2"
-                                  )}
-                                  initialText={card.content}
-                                  onChange={(text) => {
-                                    updateCard({
-                                      boardId: board.id,
-                                      sectionId: section.id,
-                                      cardId: card.id,
-                                      content: text,
-                                    }).catch((error) => alert(error.message));
-                                  }}
-                                />
-                              </div>
-                              <Button
-                                type="button"
-                                variant="light"
-                                size="sm"
-                                className={classnames(
-                                  "bg-transparent border-0 p-0 ml-2 mr-1",
-                                  sectionIndex(section.id) ===
-                                    sections.length - 1 && "invisible"
-                                )}
-                                onClick={() => {
-                                  updateCardSection({
-                                    boardId: board.id,
-                                    sectionId: section.id,
-                                    cardId: card.id,
-                                    newSectionId:
-                                      sections[sectionIndex(section.id) + 1].id,
-                                  }).catch((error) => alert(error.message));
-                                }}
-                              >
-                                <ChevronRight size="16" />
-                              </Button>
-                            </div>
-                            <div className="d-flex align-items-end mx-2">
-                              <div className="flex-fill">
-                                <small className="text-muted">
-                                  {day().diff(card.timeUpdated, "m")}m ago
-                                  {(() => {
-                                    const cardUser = users.find(
-                                      (user) => user.id === card.userId
-                                    );
-                                    if (!cardUser) {
-                                      return null;
-                                    }
+                        .map((card) => {
+                          const sectionIndex = getSectionIndex(section.id);
+                          const sectionPosition = (() => {
+                            if (sectionIndex === 0) {
+                              return "leftmost";
+                            }
+                            if (sectionIndex === sections.length - 1) {
+                              return "rightmost";
+                            }
+                            return null;
+                          })();
 
-                                    return (
-                                      <>
-                                        {" "}
-                                        by{" "}
-                                        <img
-                                          src={cardUser.photoURL}
-                                          alt={cardUser.displayName}
-                                          title={cardUser.displayName}
-                                          className={classnames(
-                                            style.CardUserAvatar,
-                                            "d-inline-block rounded-circle"
-                                          )}
-                                        />
-                                      </>
-                                    );
-                                  })()}
-                                </small>
-                              </div>
-                              <div>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="danger"
-                                  onClick={() => {
-                                    removeCard(
-                                      board.id,
-                                      section.id,
-                                      card.id
-                                    ).catch((error) => alert(error.message));
-                                  }}
-                                >
-                                  <Trash2 size="16" />
-                                  <span className="sr-only">Remove</span>
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          return (
+                            <BoardCard
+                              key={card.id}
+                              className={classnames(style.Card, "mb-3 py-2")}
+                              card={card}
+                              boardId={board.id}
+                              sectionId={section.id}
+                              user={
+                                users.find((user) => user.id === card.userId) ||
+                                null
+                              }
+                              sectionPosition={sectionPosition}
+                              onMoveSection={(direction) => {
+                                const newSectionId =
+                                  sections[
+                                    sectionIndex +
+                                      (direction === "left" ? -1 : 1)
+                                  ].id;
+
+                                updateCardSection({
+                                  boardId: board.id,
+                                  sectionId: section.id,
+                                  cardId: card.id,
+                                  newSectionId,
+                                }).catch((error) => alert(error.message));
+                              }}
+                            />
+                          );
+                        })}
                     </Col>
                   ))}
                 </Row>
@@ -298,6 +226,107 @@ function EditableContent({
           }
         }}
       />
+    </div>
+  );
+}
+
+type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
+  card: Card;
+  boardId: string;
+  sectionId: string;
+  sectionPosition?: "leftmost" | "rightmost";
+  onMoveSection?: (direction: "left" | "right") => void;
+  user?: User;
+};
+
+function BoardCard({
+  card,
+  boardId,
+  sectionId,
+  sectionPosition,
+  onMoveSection,
+  user,
+  ...restProps
+}: BoardCardProps): JSX.Element {
+  return (
+    <div {...restProps}>
+      <div className="d-flex align-items-center mb-2">
+        <Button
+          type="button"
+          variant="light"
+          size="sm"
+          className={classnames(
+            "bg-transparent border-0 p-0 ml-1 mr-2",
+            sectionPosition === "leftmost" && "invisible"
+          )}
+          onClick={() => onMoveSection("left")}
+        >
+          <ChevronLeft size="16" />
+        </Button>
+        <div className="flex-fill">
+          <EditableContent
+            className={classnames(style.CardContent, "mb-2")}
+            initialText={card.content}
+            onChange={(text) => {
+              updateCard({
+                boardId,
+                sectionId,
+                cardId: card.id,
+                content: text,
+              }).catch((error) => alert(error.message));
+            }}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="light"
+          size="sm"
+          className={classnames(
+            "bg-transparent border-0 p-0 ml-2 mr-1",
+            sectionPosition === "rightmost" && "invisible"
+          )}
+          onClick={() => onMoveSection("right")}
+        >
+          <ChevronRight size="16" />
+        </Button>
+      </div>
+      <div className="d-flex align-items-end mx-2">
+        <div className="flex-fill">
+          <small className="text-muted">
+            {day().diff(card.timeUpdated, "m")}m ago
+            {user ? (
+              <>
+                {" "}
+                by{" "}
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName}
+                  title={user.displayName}
+                  className={classnames(
+                    style.CardUserAvatar,
+                    "d-inline-block rounded-circle"
+                  )}
+                />
+              </>
+            ) : null}
+          </small>
+        </div>
+        <div>
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            onClick={() => {
+              removeCard(boardId, sectionId, card.id).catch((error) =>
+                alert(error.message)
+              );
+            }}
+          >
+            <Trash2 size="16" />
+            <span className="sr-only">Remove</span>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

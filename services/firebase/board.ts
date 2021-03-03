@@ -25,7 +25,6 @@ export interface Section {
 
 export interface Card {
   id: string;
-  sectionId: string;
   userId: string;
   content: string;
   timeCreated: number;
@@ -165,7 +164,6 @@ export function useBoardCards(boardId: string): Record<string, Card[]> {
 
                     newCards.push({
                       id: cardResult.id,
-                      sectionId: sectionResult.id,
                       userId: data.userId,
                       content: data.content,
                       timeCreated,
