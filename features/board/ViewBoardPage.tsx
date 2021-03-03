@@ -134,16 +134,6 @@ export default function ViewBoardPage(): JSX.Element {
                           )
                           .map((card) => {
                             const sectionIndex = getSectionIndex(section.id);
-                            const sectionPosition = (() => {
-                              if (sectionIndex === 0) {
-                                return "leftmost";
-                              }
-                              if (sectionIndex === sections.length - 1) {
-                                return "rightmost";
-                              }
-                              return null;
-                            })();
-
                             return (
                               <BoardCard
                                 key={card.id}
@@ -156,8 +146,11 @@ export default function ViewBoardPage(): JSX.Element {
                                     (user) => user.id === card.userId
                                   ) || null
                                 }
-                                sectionPosition={sectionPosition}
-                                onMoveSection={(direction) => {
+                                canMoveLeft={sectionIndex > 0}
+                                canMoveRight={
+                                  sectionIndex < sections.length - 1
+                                }
+                                onMove={(direction) => {
                                   const newSectionId =
                                     sections[
                                       sectionIndex +
@@ -363,18 +356,20 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
   boardId: string;
   sectionId: string;
-  sectionPosition?: "leftmost" | "rightmost";
-  onMoveSection?: (direction: "left" | "right") => void;
   user?: User;
+  canMoveLeft?: boolean;
+  canMoveRight?: boolean;
+  onMove?: (direction: "left" | "right") => void;
 };
 
 function BoardCard({
   card,
   boardId,
   sectionId,
-  sectionPosition,
-  onMoveSection,
   user,
+  canMoveLeft = false,
+  canMoveRight = false,
+  onMove,
   ...restProps
 }: BoardCardProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
@@ -413,9 +408,9 @@ function BoardCard({
           size="sm"
           className={classnames(
             "bg-transparent border-0 p-0 ml-1 mr-2",
-            sectionPosition === "leftmost" && "invisible"
+            !canMoveLeft && "invisible"
           )}
-          onClick={() => onMoveSection("left")}
+          onClick={() => onMove("left")}
         >
           <ChevronLeft size="16" />
         </Button>
@@ -440,9 +435,9 @@ function BoardCard({
           size="sm"
           className={classnames(
             "bg-transparent border-0 p-0 ml-2 mr-1",
-            sectionPosition === "rightmost" && "invisible"
+            !canMoveRight && "invisible"
           )}
-          onClick={() => onMoveSection("right")}
+          onClick={() => onMove("right")}
         >
           <ChevronRight size="16" />
         </Button>
