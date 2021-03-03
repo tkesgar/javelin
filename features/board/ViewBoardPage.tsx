@@ -1,7 +1,9 @@
 import {
+  Board,
   Card,
   createCard,
   removeCard,
+  updateBoard,
   updateBoardUserFromAuth,
   updateCard,
   updateCardSection,
@@ -11,10 +13,17 @@ import {
   useBoardUsers,
   User,
 } from "@/services/firebase/board";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import * as React from "react";
-import { Button, Col, Container, Row, Spinner } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Container,
+  Form,
+  Modal,
+  Row,
+  Spinner,
+} from "react-bootstrap";
 import {
   AlertCircle,
   ChevronLeft,
@@ -36,6 +45,7 @@ export default function ViewBoardPage(): JSX.Element {
   const sections = useBoardSections(router.query.boardId as string);
   const sectionCards = useBoardCards(router.query.boardId as string);
   const users = useBoardUsers(router.query.boardId as string);
+  const [showSettings, setShowSettings] = React.useState(false);
 
   React.useEffect(() => {
     const boardId = router.query.boardId as string;
@@ -56,123 +66,205 @@ export default function ViewBoardPage(): JSX.Element {
   }
 
   return (
-    <div className="min-vh-100 d-flex flex-column">
-      <MainNavbar />
-      {board && sections ? (
-        <>
-          <div>
-            <Container fluid className="my-3">
-              <div className="border-bottom border-light pb-3 d-flex">
-                <div className="flex-fill">
-                  <h1>{board.title}</h1>
-                  <div className="text-muted mb-3">{board.description}</div>
-                </div>
-                <div className="ml-3">
-                  <Link href={`/${router.query.boardId}/settings`} passHref>
-                    <Button variant="secondary">
+    <>
+      <div className="min-vh-100 d-flex flex-column">
+        <MainNavbar />
+        {board && sections ? (
+          <>
+            <div>
+              <Container fluid className="my-3">
+                <div className="border-bottom border-light pb-3 d-flex">
+                  <div className="flex-fill">
+                    <h1>{board.title}</h1>
+                    <div className="text-muted mb-3">{board.description}</div>
+                  </div>
+                  <div className="ml-3">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowSettings(true)}
+                    >
                       <Settings size="16" />
                       <span className="sr-only">Settings</span>
                     </Button>
-                  </Link>
+                  </div>
                 </div>
-              </div>
-            </Container>
-          </div>
-          <div className={classnames(style.Viewport, "border-top flex-fill")}>
-            <div
-              className={classnames(
-                style.Container,
-                style[`SectionCount${board.sectionCount}`],
-                "mx-auto my-3"
-              )}
-            >
-              <Container fluid>
-                <Row>
-                  {sections.map((section) => (
-                    <Col key={section.id}>
-                      <h2
-                        className={classnames(
-                          style.SectionTitle,
-                          "h5 text-center mb-3"
-                        )}
-                      >
-                        {section.title}
-                      </h2>
-                      <Button
-                        type="button"
-                        size="sm"
-                        block
-                        className="mb-3"
-                        onClick={() => {
-                          createCard({
-                            boardId: board.id,
-                            sectionId: section.id,
-                            userId: auth.uid,
-                          }).catch((error) => alert(error.message));
-                        }}
-                      >
-                        <Plus size="16" />
-                      </Button>
-                      {(sectionCards?.[section.id] || [])
-                        .sort(
-                          (cardA, cardB) =>
-                            cardB.timeCreated - cardA.timeCreated
-                        )
-                        .map((card) => {
-                          const sectionIndex = getSectionIndex(section.id);
-                          const sectionPosition = (() => {
-                            if (sectionIndex === 0) {
-                              return "leftmost";
-                            }
-                            if (sectionIndex === sections.length - 1) {
-                              return "rightmost";
-                            }
-                            return null;
-                          })();
-
-                          return (
-                            <BoardCard
-                              key={card.id}
-                              className={classnames(style.Card, "mb-3 py-2")}
-                              card={card}
-                              boardId={board.id}
-                              sectionId={section.id}
-                              user={
-                                users.find((user) => user.id === card.userId) ||
-                                null
-                              }
-                              sectionPosition={sectionPosition}
-                              onMoveSection={(direction) => {
-                                const newSectionId =
-                                  sections[
-                                    sectionIndex +
-                                      (direction === "left" ? -1 : 1)
-                                  ].id;
-
-                                updateCardSection({
-                                  boardId: board.id,
-                                  sectionId: section.id,
-                                  cardId: card.id,
-                                  newSectionId,
-                                }).catch((error) => alert(error.message));
-                              }}
-                            />
-                          );
-                        })}
-                    </Col>
-                  ))}
-                </Row>
               </Container>
             </div>
-          </div>
-        </>
-      ) : (
-        <Spinner
-          animation="border"
-          className="d-block text-center mx-auto my-5"
-        />
-      )}
-    </div>
+            <div className={classnames(style.Viewport, "border-top flex-fill")}>
+              <div
+                className={classnames(
+                  style.Container,
+                  style[`SectionCount${board.sectionCount}`],
+                  "mx-auto my-3"
+                )}
+              >
+                <Container fluid>
+                  <Row>
+                    {sections.map((section) => (
+                      <Col key={section.id}>
+                        <h2
+                          className={classnames(
+                            style.SectionTitle,
+                            "h5 text-center mb-3"
+                          )}
+                        >
+                          {section.title}
+                        </h2>
+                        <Button
+                          type="button"
+                          size="sm"
+                          block
+                          className="mb-3"
+                          onClick={() => {
+                            createCard({
+                              boardId: board.id,
+                              sectionId: section.id,
+                              userId: auth.uid,
+                            }).catch((error) => alert(error.message));
+                          }}
+                        >
+                          <Plus size="16" />
+                        </Button>
+                        {(sectionCards?.[section.id] || [])
+                          .sort(
+                            (cardA, cardB) =>
+                              cardB.timeCreated - cardA.timeCreated
+                          )
+                          .map((card) => {
+                            const sectionIndex = getSectionIndex(section.id);
+                            const sectionPosition = (() => {
+                              if (sectionIndex === 0) {
+                                return "leftmost";
+                              }
+                              if (sectionIndex === sections.length - 1) {
+                                return "rightmost";
+                              }
+                              return null;
+                            })();
+
+                            return (
+                              <BoardCard
+                                key={card.id}
+                                className={classnames(style.Card, "mb-3 py-2")}
+                                card={card}
+                                boardId={board.id}
+                                sectionId={section.id}
+                                user={
+                                  users.find(
+                                    (user) => user.id === card.userId
+                                  ) || null
+                                }
+                                sectionPosition={sectionPosition}
+                                onMoveSection={(direction) => {
+                                  const newSectionId =
+                                    sections[
+                                      sectionIndex +
+                                        (direction === "left" ? -1 : 1)
+                                    ].id;
+
+                                  updateCardSection({
+                                    boardId: board.id,
+                                    sectionId: section.id,
+                                    cardId: card.id,
+                                    newSectionId,
+                                  }).catch((error) => alert(error.message));
+                                }}
+                              />
+                            );
+                          })}
+                      </Col>
+                    ))}
+                  </Row>
+                </Container>
+              </div>
+            </div>
+          </>
+        ) : (
+          <Spinner
+            animation="border"
+            className="d-block text-center mx-auto my-5"
+          />
+        )}
+      </div>
+
+      <Modal
+        size="lg"
+        show={showSettings}
+        onHide={() => setShowSettings(false)}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title as="h1" className="h4">
+            Settings
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <BoardSettings board={board} />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSettings(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+}
+
+interface BoardSettingsProps {
+  board: Board;
+}
+
+function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
+  const [inputTitle, setInputTitle] = React.useState(board.title);
+  const [inputDescription, setInputDescription] = React.useState(
+    board.description || ""
+  );
+
+  React.useEffect(() => {
+    setInputTitle(board.title);
+    setInputDescription(board.description || "");
+  }, [board]);
+
+  return (
+    <>
+      <h2 className="h5">Board information</h2>
+      <Form
+        onSubmit={(evt) => {
+          evt.preventDefault();
+
+          updateBoard(board.id, {
+            title: inputTitle.trim(),
+            description: inputDescription.trim() || null,
+          }).catch((error) => alert(error.message));
+        }}
+      >
+        <Form.Group controlId="createBoard_title" className="my-3">
+          <Form.Label>Title</Form.Label>
+          <Form.Control
+            type="text"
+            maxLength={60}
+            placeholder={board.title}
+            required
+            value={inputTitle}
+            onChange={(evt) => setInputTitle(evt.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="createBoard_description" className="my-3">
+          <Form.Label>Description</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            maxLength={160}
+            placeholder={board.description}
+            value={inputDescription}
+            onChange={(evt) => setInputDescription(evt.target.value || "")}
+          />
+        </Form.Group>
+        <Button type="submit" variant="primary">
+          Update
+        </Button>
+      </Form>
+    </>
   );
 }
 
@@ -285,7 +377,9 @@ function BoardCard({
 }: BoardCardProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [tags, setTags] = React.useState<string[]>([]);
-
+  const [cardTime, setCardTime] = React.useState<string>(
+    `${day().diff(card.timeUpdated, "m")}m ago`
+  );
   const onTagsCallback = React.useCallback((tags) => setTags(tags), []);
 
   React.useEffect(() => {
@@ -299,6 +393,14 @@ function BoardCard({
 
     return () => clearTimeout(timeout);
   }, [confirmDelete]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      setCardTime(`${day().diff(card.timeUpdated, "m")}m ago`);
+    }, 60 * 1000);
+
+    return () => clearTimeout(timeout);
+  }, [card]);
 
   return (
     <div {...restProps}>
@@ -345,24 +447,16 @@ function BoardCard({
       </div>
       <div className="d-flex align-items-end mx-2">
         <div className="flex-fill">
-          <small className="text-muted">
-            {day().diff(card.timeUpdated, "m")}m ago
-            {user ? (
-              <>
-                {" "}
-                by{" "}
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName}
-                  title={user.displayName}
-                  className={classnames(
-                    style.CardUserAvatar,
-                    "d-inline-block rounded-circle"
-                  )}
-                />
-              </>
-            ) : null}
-          </small>
+          <img
+            src={user.photoURL}
+            alt={user.displayName}
+            title={user.displayName}
+            className={classnames(
+              style.CardUserAvatar,
+              "d-inline-block rounded-circle"
+            )}
+          />{" "}
+          <small className="text-muted">{cardTime}</small>
         </div>
         <div>
           <Button

@@ -218,7 +218,7 @@ interface CreateBoardData {
 }
 
 export async function createBoard(
-  uid: string,
+  userId: string,
   data: CreateBoardData
 ): Promise<string> {
   const { title, description, sectionTitles } = data;
@@ -229,7 +229,7 @@ export async function createBoard(
   batch.set(boardRef, {
     title,
     description,
-    ownerId: uid,
+    ownerId: userId,
     sectionCount: sectionTitles.length,
   });
 
@@ -242,6 +242,22 @@ export async function createBoard(
   debug("created board");
 
   return boardRef.id;
+}
+
+interface UpdateBoardData {
+  title: string;
+  description: string;
+}
+
+export async function updateBoard(
+  id: string,
+  { title, description }: UpdateBoardData
+): Promise<void> {
+  await db().collection("boards").doc(id).update({
+    title,
+    description,
+  });
+  debug("updated board");
 }
 
 interface CreateCardData {
