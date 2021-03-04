@@ -25,6 +25,5 @@ jobs:
         run: npm ci
       - name: Execute linters
         run: |
-          npm run lint:compile
           npm run lint:scripts
           npm run lint:styles
