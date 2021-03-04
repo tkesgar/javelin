@@ -7,6 +7,7 @@ const db = () => firebase.firestore();
 
 export interface Board {
   id: string;
+  ownerId: string;
   title: string;
   description: string;
   sectionCount: number;
@@ -49,6 +50,7 @@ export function useBoard(boardId: string): Board {
           const data = snapshot.data();
           setBoard({
             id: snapshot.id,
+            ownerId: data.ownerId,
             title: data.title,
             description: data.description,
             sectionCount: data.sectionCount,
@@ -201,6 +203,7 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
     const data = result.data();
     boards.push({
       id: result.id,
+      ownerId: data.ownerId,
       description: data.description,
       title: data.title,
       sectionCount: data.sectionCount,

@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/router";
 import * as React from "react";
 import {
+  Alert,
   Button,
   Col,
   Container,
@@ -210,6 +211,7 @@ interface BoardSettingsProps {
 }
 
 function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
+  const auth = useAuth() as Auth;
   const [inputTitle, setInputTitle] = React.useState(board.title);
   const [inputDescription, setInputDescription] = React.useState(
     board.description || ""
@@ -220,9 +222,16 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
     setInputDescription(board.description || "");
   }, [board]);
 
+  const isBoardOwner = board.ownerId === auth?.uid;
+
   return (
     <>
       <h2 className="h5">Board information</h2>
+      {!isBoardOwner ? (
+        <Alert variant="warning">
+          Only board information can modify these settings.
+        </Alert>
+      ) : null}
       <Form
         onSubmit={(evt) => {
           evt.preventDefault();
@@ -239,6 +248,7 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             type="text"
             maxLength={60}
             placeholder={board.title}
+            disabled={!isBoardOwner}
             required
             value={inputTitle}
             onChange={(evt) => setInputTitle(evt.target.value)}
@@ -251,11 +261,12 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             rows={3}
             maxLength={160}
             placeholder={board.description}
+            disabled={!isBoardOwner}
             value={inputDescription}
             onChange={(evt) => setInputDescription(evt.target.value || "")}
           />
         </Form.Group>
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="primary" disabled={!isBoardOwner}>
           Update
         </Button>
       </Form>
