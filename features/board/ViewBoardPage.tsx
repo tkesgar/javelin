@@ -141,6 +141,13 @@ export default function ViewBoardPage(): JSX.Element {
                                 canMoveRight={
                                   sectionIndex < sections.length - 1
                                 }
+                                showCreator={board.config.showCardCreator}
+                                showTimestamp={board.config.showTimestamp}
+                                showRemove={
+                                  board.config.removeCardOnlyOwner
+                                    ? board.ownerId === auth?.uid
+                                    : true
+                                }
                                 onMove={(direction) => {
                                   const newSectionId =
                                     sections[
@@ -221,6 +228,9 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
   const [inputDescription, setInputDescription] = React.useState(
     board.description || ""
   );
+  const [config, setConfig] = React.useState<Board["config"]>({
+    ...board.config,
+  });
   const [labels, setLabels] = React.useState<{ name: string; color: string }[]>(
     []
   );
@@ -230,9 +240,23 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
   React.useEffect(() => {
     setInputTitle(board.title);
     setInputDescription(board.description || "");
+    setConfig({ ...board.config });
   }, [board]);
 
   const isBoardOwner = board.ownerId === auth?.uid;
+
+  function updateConfig(name: keyof Board["config"], value: unknown): void {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      [name]: value,
+    }));
+    updateBoard(board.id, {
+      config: {
+        ...board.config,
+        [name]: value,
+      },
+    }).catch((error) => alert(error.message));
+  }
 
   return (
     <>
@@ -290,6 +314,11 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             type="switch"
             id="boardSettings_showCreator"
             label="Show card creator"
+            checked={config.showCardCreator}
+            onChange={(evt) => {
+              const value = evt.target.checked;
+              updateConfig("showCardCreator", value);
+            }}
           />
         </Form.Group>
         <Form.Group>
@@ -297,6 +326,11 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             type="switch"
             id="boardSettings_showUpdatedTimestamp"
             label="Show card last updated timestamp"
+            checked={config.showTimestamp}
+            onChange={(evt) => {
+              const value = evt.target.checked;
+              updateConfig("showTimestamp", value);
+            }}
           />
         </Form.Group>
         <Form.Group>
@@ -304,6 +338,11 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             type="switch"
             id="boardSettings_hideRemoveCardButton"
             label="Only show remove card button to board owner"
+            checked={config.removeCardOnlyOwner}
+            onChange={(evt) => {
+              const value = evt.target.checked;
+              updateConfig("removeCardOnlyOwner", value);
+            }}
           />
         </Form.Group>
       </div>

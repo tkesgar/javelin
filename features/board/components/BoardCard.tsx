@@ -11,6 +11,9 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   user?: User;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
+  showCreator?: boolean;
+  showTimestamp?: boolean;
+  showRemove?: boolean;
   onMove?: (direction: "left" | "right") => void;
   onTextUpdate?: (text: string) => void;
   onRemove?: () => void;
@@ -21,6 +24,9 @@ export default function BoardCard({
   user,
   canMoveLeft = false,
   canMoveRight = false,
+  showCreator = false,
+  showTimestamp = false,
+  showRemove = false,
   onMove,
   onTextUpdate,
   onRemove,
@@ -92,7 +98,7 @@ export default function BoardCard({
       </div>
       <div className="d-flex align-items-end mx-2">
         <div className="flex-fill">
-          {user ? (
+          {user && showCreator ? (
             <img
               src={user.photoURL}
               alt={user.displayName}
@@ -103,41 +109,45 @@ export default function BoardCard({
               )}
             />
           ) : null}
-          <small className="text-muted">{cardTime}</small>
+          {showTimestamp ? (
+            <small className="text-muted">{cardTime}</small>
+          ) : null}
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant={confirmDelete ? "danger" : "warning"}
-          className={classnames(style.CardDelete, "rounded-circle px-0")}
-          style={{ width: "28px" }}
-          onClick={() => {
-            if (!confirmDelete) {
-              setConfirmDelete(true);
-              return;
-            }
+        {showRemove ? (
+          <Button
+            type="button"
+            size="sm"
+            variant={confirmDelete ? "danger" : "warning"}
+            className={classnames(style.CardDelete, "rounded-circle px-0")}
+            style={{ width: "28px" }}
+            onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                return;
+              }
 
-            if (onRemove) {
-              onRemove();
-            }
-          }}
-          onContextMenu={(evt) => {
-            evt.preventDefault();
-            setConfirmDelete(false);
-          }}
-        >
-          {confirmDelete ? (
-            <>
-              <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
-              <span className="sr-only">Are you sure?</span>
-            </>
-          ) : (
-            <>
-              <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
-              <span className="sr-only">Remove</span>
-            </>
-          )}
-        </Button>
+              if (onRemove) {
+                onRemove();
+              }
+            }}
+            onContextMenu={(evt) => {
+              evt.preventDefault();
+              setConfirmDelete(false);
+            }}
+          >
+            {confirmDelete ? (
+              <>
+                <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
+                <span className="sr-only">Are you sure?</span>
+              </>
+            ) : (
+              <>
+                <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
+                <span className="sr-only">Remove</span>
+              </>
+            )}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

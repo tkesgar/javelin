@@ -11,6 +11,11 @@ export interface Board {
   title: string;
   description: string;
   sectionCount: number;
+  config: {
+    showCardCreator: boolean;
+    showTimestamp: boolean;
+    removeCardOnlyOwner: boolean;
+  };
 }
 
 export interface User {
@@ -31,6 +36,12 @@ export interface Card {
   timeCreated: number;
   timeUpdated: number;
 }
+
+const DEFAULT_BOARD_CONFIG: Board["config"] = {
+  showCardCreator: true,
+  showTimestamp: true,
+  removeCardOnlyOwner: false,
+};
 
 const debug = createDebug("firebase-board");
 
@@ -54,6 +65,10 @@ export function useBoard(boardId: string): Board {
             title: data.title,
             description: data.description,
             sectionCount: data.sectionCount,
+            config: {
+              ...DEFAULT_BOARD_CONFIG,
+              ...(data.config || {}),
+            },
           });
           debug("read board snapshot");
         } else {
@@ -207,6 +222,10 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
       description: data.description,
       title: data.title,
       sectionCount: data.sectionCount,
+      config: {
+        ...DEFAULT_BOARD_CONFIG,
+        ...(data.config || {}),
+      },
     });
   });
   debug("get my boards");
@@ -222,7 +241,8 @@ interface CreateBoardData {
 
 export async function createBoard(
   userId: string,
-  data: CreateBoardData
+  data: CreateBoardData,
+  config: Partial<Board["config"]> = {}
 ): Promise<string> {
   const { title, description, sectionTitles } = data;
 
@@ -234,6 +254,10 @@ export async function createBoard(
     description,
     ownerId: userId,
     sectionCount: sectionTitles.length,
+    config: {
+      ...DEFAULT_BOARD_CONFIG,
+      ...config,
+    },
   });
 
   for (const [i, title] of sectionTitles.entries()) {
@@ -248,18 +272,23 @@ export async function createBoard(
 }
 
 interface UpdateBoardData {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  config?: Board["config"];
 }
 
 export async function updateBoard(
   id: string,
-  { title, description }: UpdateBoardData
+  { title, description, config }: UpdateBoardData
 ): Promise<void> {
-  await db().collection("boards").doc(id).update({
-    title,
-    description,
-  });
+  await db()
+    .collection("boards")
+    .doc(id)
+    .update({
+      ...(title && { title }),
+      ...(description && { description }),
+      ...(config && { config }),
+    });
   debug("updated board");
 }
 
