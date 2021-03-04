@@ -221,6 +221,11 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
   const [inputDescription, setInputDescription] = React.useState(
     board.description || ""
   );
+  const [labels, setLabels] = React.useState<{ name: string; color: string }[]>(
+    []
+  );
+
+  const enableLabels = true;
 
   React.useEffect(() => {
     setInputTitle(board.title);
@@ -231,12 +236,13 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
 
   return (
     <>
-      <h2 className="h5">Board information</h2>
       {!isBoardOwner ? (
         <Alert variant="warning">
           Only board information can modify these settings.
         </Alert>
       ) : null}
+
+      <h2 className="h5 mb-3">Board information</h2>
       <Form
         onSubmit={(evt) => {
           evt.preventDefault();
@@ -246,8 +252,9 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             description: inputDescription.trim() || null,
           }).catch((error) => alert(error.message));
         }}
+        className="mb-4"
       >
-        <Form.Group controlId="createBoard_title" className="my-3">
+        <Form.Group controlId="boardSettings_title" className="my-3">
           <Form.Label>Title</Form.Label>
           <Form.Control
             type="text"
@@ -259,7 +266,7 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
             onChange={(evt) => setInputTitle(evt.target.value)}
           />
         </Form.Group>
-        <Form.Group controlId="createBoard_description" className="my-3">
+        <Form.Group controlId="boardSettings_description" className="my-3">
           <Form.Label>Description</Form.Label>
           <Form.Control
             as="textarea"
@@ -275,6 +282,60 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
           Update
         </Button>
       </Form>
+
+      <h2 className="h5 mb-3">Board features</h2>
+      <div className="mb-4">
+        <Form.Group>
+          <Form.Check
+            type="switch"
+            id="boardSettings_showCreator"
+            label="Show card creator"
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Check
+            type="switch"
+            id="boardSettings_showUpdatedTimestamp"
+            label="Show card last updated timestamp"
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Check
+            type="switch"
+            id="boardSettings_hideRemoveCardButton"
+            label="Only show remove card button to board owner"
+          />
+        </Form.Group>
+      </div>
+
+      <h2 className="h5 mb-3">Labels</h2>
+      <div className="mb-4">
+        <Form.Group>
+          <Form.Check
+            type="switch"
+            id="boardSettings_enableLabels"
+            label="Enable card labels"
+          />
+        </Form.Group>
+        {enableLabels ? (
+          <>
+            <Button type="button" variant="primary" className="mb-3">
+              Add label
+            </Button>
+            {labels.length === 0 ? (
+              <div className="text-muted">
+                This board currently has no labels.
+              </div>
+            ) : (
+              <ul>
+                {labels.map((label) => (
+                  <li key={label.name}></li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : null}
+      </div>
     </>
   );
 }
