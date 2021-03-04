@@ -1,0 +1,41 @@
+@import "../../../styles/includes";
+
+.Card {
+  background-color: #ffefc1;
+}
+
+.CardContent {
+  font-size: 16px;
+  font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
+    "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
+  min-height: 2rem;
+}
+
+.CardUserAvatar {
+  width: 1rem;
+  height: 1rem;
+
+  // Prevent alt text from overflowing the img component if image fails to load.
+  overflow: hidden;
+}
+
+.CardDelete {
+  transition: $transition-base;
+}
+
+.EditableContentContainer {
+  position: relative;
+}
+
+.EditableContentPlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.EditableContentContainer :global(.Label) {
+  padding: 0.1rem 0.2rem;
+  font-weight: 700;
+}

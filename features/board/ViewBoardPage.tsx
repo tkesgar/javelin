@@ -1,6 +1,5 @@
 import {
   Board,
-  Card,
   createCard,
   removeCard,
   updateBoard,
@@ -11,7 +10,6 @@ import {
   useBoardCards,
   useBoardSections,
   useBoardUsers,
-  User,
 } from "@/services/firebase/board";
 import { useRouter } from "next/router";
 import * as React from "react";
@@ -25,19 +23,12 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Settings,
-  Trash2,
-} from "react-feather";
+import { Plus, Settings } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
-import day from "dayjs";
 import { Auth, useAuth } from "@/services/firebase/auth";
+import BoardCard from "./components/BoardCard";
 
 export default function ViewBoardPage(): JSX.Element {
   const auth = useAuth() as Auth;
@@ -128,6 +119,7 @@ export default function ViewBoardPage(): JSX.Element {
                         >
                           <Plus size="16" />
                         </Button>
+
                         {(sectionCards?.[section.id] || [])
                           .sort(
                             (cardA, cardB) =>
@@ -140,8 +132,6 @@ export default function ViewBoardPage(): JSX.Element {
                                 key={card.id}
                                 className={classnames(style.Card, "mb-3 py-2")}
                                 card={card}
-                                boardId={board.id}
-                                sectionId={section.id}
                                 user={
                                   users?.find(
                                     (user) => user.id === card.userId
@@ -164,6 +154,21 @@ export default function ViewBoardPage(): JSX.Element {
                                     cardId: card.id,
                                     newSectionId,
                                   }).catch((error) => alert(error.message));
+                                }}
+                                onTextUpdate={(text) => {
+                                  updateCard({
+                                    boardId: board.id,
+                                    sectionId: section.id,
+                                    cardId: card.id,
+                                    content: text,
+                                  }).catch((error) => alert(error.message));
+                                }}
+                                onRemove={() => {
+                                  removeCard(
+                                    board.id,
+                                    section.id,
+                                    card.id
+                                  ).catch((error) => alert(error.message));
                                 }}
                               />
                             );
@@ -271,237 +276,5 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
         </Button>
       </Form>
     </>
-  );
-}
-
-function processText(
-  text: string
-): {
-  tags: string[];
-  html: string;
-} {
-  return {
-    tags: [...(text.match(/#\w+/g) || [])],
-    html: text.replace(/#(\w+)/g, '<span class="Label Label-$1">#$1</span>'),
-  };
-}
-
-type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
-  initialText?: string;
-  placeholder?: string;
-  onChange?: (text: string) => void;
-  onTags?: (tags: string[]) => void;
-};
-
-function EditableContent({
-  initialText = "",
-  placeholder = null,
-  onChange,
-  onTags,
-  className,
-  ...restProps
-}: EditableContentProps): JSX.Element {
-  const divRef = React.useRef<HTMLDivElement>();
-  const [text, setText] = React.useState(initialText);
-  const [lastChangeText, setLastChangeText] = React.useState(initialText);
-
-  React.useEffect(() => {
-    if (!divRef.current) {
-      return;
-    }
-
-    const { tags, html } = processText(initialText);
-
-    if (onTags) {
-      onTags(tags);
-    }
-
-    divRef.current.innerHTML = html;
-  }, [onTags, initialText]);
-
-  React.useEffect(() => {
-    if (!divRef.current) {
-      return;
-    }
-
-    const { tags, html } = processText(lastChangeText);
-
-    if (onTags) {
-      onTags(tags);
-    }
-
-    divRef.current.innerHTML = html;
-  }, [onTags, lastChangeText]);
-
-  return (
-    <div
-      className={classnames(style.EditableContentContainer, className)}
-      {...restProps}
-    >
-      {placeholder && text.length === 0 ? (
-        <div
-          className={classnames(style.EditableContentPlaceholder, "text-muted")}
-        >
-          {placeholder}
-        </div>
-      ) : null}
-      <div
-        ref={divRef}
-        contentEditable
-        onInput={() => setText(divRef.current.innerText)}
-        onBlur={() => {
-          if (onChange) {
-            const currentText = divRef.current.innerText;
-            if (currentText !== lastChangeText) {
-              setLastChangeText(currentText);
-              onChange(currentText);
-            }
-          }
-        }}
-      />
-    </div>
-  );
-}
-
-type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
-  card: Card;
-  boardId: string;
-  sectionId: string;
-  user?: User;
-  canMoveLeft?: boolean;
-  canMoveRight?: boolean;
-  onMove?: (direction: "left" | "right") => void;
-};
-
-function BoardCard({
-  card,
-  boardId,
-  sectionId,
-  user,
-  canMoveLeft = false,
-  canMoveRight = false,
-  onMove,
-  ...restProps
-}: BoardCardProps): JSX.Element {
-  const [confirmDelete, setConfirmDelete] = React.useState(false);
-  const [tags, setTags] = React.useState<string[]>([]);
-  const [cardTime, setCardTime] = React.useState<string>(
-    `${day().diff(card.timeUpdated, "m")}m ago`
-  );
-  const onTagsCallback = React.useCallback((tags) => setTags(tags), []);
-
-  React.useEffect(() => {
-    if (!confirmDelete) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setConfirmDelete(false);
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, [confirmDelete]);
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      setCardTime(`${day().diff(card.timeUpdated, "m")}m ago`);
-    }, 60 * 1000);
-
-    return () => clearTimeout(timeout);
-  }, [card]);
-
-  return (
-    <div {...restProps}>
-      <div className="d-flex align-items-center mb-2">
-        <Button
-          type="button"
-          variant="light"
-          size="sm"
-          className={classnames(
-            "bg-transparent border-0 p-0 ml-1 mr-2",
-            !canMoveLeft && "invisible"
-          )}
-          onClick={() => onMove("left")}
-        >
-          <ChevronLeft size="16" />
-        </Button>
-        <div className="flex-fill">
-          <EditableContent
-            className={classnames(style.CardContent, "mb-2")}
-            initialText={card.content}
-            onChange={(text) => {
-              updateCard({
-                boardId,
-                sectionId,
-                cardId: card.id,
-                content: text,
-              }).catch((error) => alert(error.message));
-            }}
-            onTags={onTagsCallback}
-          />
-        </div>
-        <Button
-          type="button"
-          variant="light"
-          size="sm"
-          className={classnames(
-            "bg-transparent border-0 p-0 ml-2 mr-1",
-            !canMoveRight && "invisible"
-          )}
-          onClick={() => onMove("right")}
-        >
-          <ChevronRight size="16" />
-        </Button>
-      </div>
-      <div className="d-flex align-items-end mx-2">
-        <div className="flex-fill">
-          {user ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName}
-              title={user.displayName}
-              className={classnames(
-                style.CardUserAvatar,
-                "d-inline-block rounded-circle mr-1"
-              )}
-            />
-          ) : null}
-          <small className="text-muted">{cardTime}</small>
-        </div>
-        <Button
-          type="button"
-          size="sm"
-          variant={confirmDelete ? "danger" : "warning"}
-          className={classnames(style.CardDelete, "rounded-circle px-0")}
-          style={{ width: "28px" }}
-          onClick={() => {
-            if (!confirmDelete) {
-              setConfirmDelete(true);
-              return;
-            }
-
-            removeCard(boardId, sectionId, card.id).catch((error) =>
-              alert(error.message)
-            );
-          }}
-          onContextMenu={(evt) => {
-            evt.preventDefault();
-            setConfirmDelete(false);
-          }}
-        >
-          {confirmDelete ? (
-            <>
-              <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
-              <span className="sr-only">Are you sure?</span>
-            </>
-          ) : (
-            <>
-              <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
-              <span className="sr-only">Remove</span>
-            </>
-          )}
-        </Button>
-      </div>
-    </div>
   );
 }
