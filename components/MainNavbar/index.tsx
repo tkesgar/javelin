@@ -10,8 +10,24 @@ export default function MainNavbar(): JSX.Element {
 
   return (
     <Navbar bg="primary" variant="dark" className="py-2">
+      <style jsx>{`
+        .WIP {
+          background: var(--yellow);
+          border-radius: 0.5em;
+          color: var(--dark);
+          display: inline-block;
+          font-size: 0.2em;
+          font-weight: 700;
+          line-height: normal;
+          margin-left: 0.25rem;
+          padding: 0.5em;
+          vertical-align: top;
+        }
+      `}</style>
       <Link href={auth ? "/home" : "/"} passHref>
-        <Navbar.Brand>javelin</Navbar.Brand>
+        <Navbar.Brand>
+          javelin<span className="WIP">WIP</span>
+        </Navbar.Brand>
       </Link>
 
       {auth ? (
