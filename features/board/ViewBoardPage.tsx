@@ -468,41 +468,39 @@ function BoardCard({
           ) : null}
           <small className="text-muted">{cardTime}</small>
         </div>
-        <div>
-          <Button
-            type="button"
-            size="sm"
-            variant={confirmDelete ? "danger" : "warning"}
-            className="rounded-circle px-0"
-            style={{ width: "28px" }}
-            onClick={() => {
-              if (!confirmDelete) {
-                setConfirmDelete(true);
-                return;
-              }
+        <Button
+          type="button"
+          size="sm"
+          variant={confirmDelete ? "danger" : "warning"}
+          className={classnames(style.CardDelete, "rounded-circle px-0")}
+          style={{ width: "28px" }}
+          onClick={() => {
+            if (!confirmDelete) {
+              setConfirmDelete(true);
+              return;
+            }
 
-              removeCard(boardId, sectionId, card.id).catch((error) =>
-                alert(error.message)
-              );
-            }}
-            onContextMenu={(evt) => {
-              evt.preventDefault();
-              setConfirmDelete(false);
-            }}
-          >
-            {confirmDelete ? (
-              <>
-                <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
-                <span className="sr-only">Are you sure?</span>
-              </>
-            ) : (
-              <>
-                <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
-                <span className="sr-only">Remove</span>
-              </>
-            )}
-          </Button>
-        </div>
+            removeCard(boardId, sectionId, card.id).catch((error) =>
+              alert(error.message)
+            );
+          }}
+          onContextMenu={(evt) => {
+            evt.preventDefault();
+            setConfirmDelete(false);
+          }}
+        >
+          {confirmDelete ? (
+            <>
+              <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
+              <span className="sr-only">Are you sure?</span>
+            </>
+          ) : (
+            <>
+              <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
+              <span className="sr-only">Remove</span>
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

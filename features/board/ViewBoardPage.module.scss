@@ -60,6 +60,10 @@
   overflow: hidden;
 }
 
+.CardDelete {
+  transition: $transition-base;
+}
+
 .EditableContentContainer {
   position: relative;
 }
