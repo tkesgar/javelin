@@ -1,5 +1,5 @@
 import DefaultLayout from "@/components/DefaultLayout";
-import { useAuth, Auth } from "@/services/firebase/auth";
+import { useAuth } from "@/services/firebase/auth";
 import { createBoard } from "@/services/firebase/board";
 import { useRouter } from "next/router";
 import * as React from "react";
@@ -16,7 +16,7 @@ function range(count: number): number[] {
 }
 
 export default function NewBoardPage(): JSX.Element {
-  const auth = useAuth() as Auth;
+  const auth = useAuth();
   const router = useRouter();
 
   return (
@@ -27,8 +27,15 @@ export default function NewBoardPage(): JSX.Element {
             <Card.Title>Create a new board</Card.Title>
             <NewBoardForm
               onSubmit={(value) => {
+                if (!auth) {
+                  throw new Error(`User is not authenticated`);
+                }
+
                 (async () => {
-                  const boardId = await createBoard(auth.uid, value);
+                  const boardId = await createBoard({
+                    userId: auth.uid,
+                    ...value,
+                  });
                   await router.push(`/board/${boardId}`);
                 })().catch((error) => alert(error.message));
               }}

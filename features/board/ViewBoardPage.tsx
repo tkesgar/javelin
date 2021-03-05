@@ -26,7 +26,7 @@ import { Plus, Settings, Trash2 } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
-import { Auth, useAuth } from "@/services/firebase/auth";
+import { useAuth } from "@/services/firebase/auth";
 import BoardCard from "./components/BoardCard";
 import debounce from "lodash/debounce";
 import ContentEditable from "./components/ContentEditable";
@@ -218,7 +218,7 @@ interface BoardSettingsProps {
 }
 
 function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
-  const auth = useAuth() as Auth;
+  const auth = useAuth();
   const [inputTitle, setInputTitle] = React.useState(board.title);
   const [inputDescription, setInputDescription] = React.useState(
     board.description || ""
@@ -237,7 +237,7 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
     setLabels([...board.labels]);
   }, [board]);
 
-  const isBoardOwner = board.ownerId === auth?.uid;
+  const isBoardOwner = board.ownerId === (auth && auth.uid);
 
   function updateConfig(name: keyof Board["config"], value: unknown): void {
     setConfig((currentConfig) => ({
