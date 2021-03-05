@@ -57,7 +57,7 @@ export default function BoardCard({
     return () => clearTimeout(timeout);
   }, [confirmDelete]);
 
-  const cardTime = formatTimestamp(card.timeUpdated);
+  const cardTime = formatTimestamp(card.timeCreated);
 
   return (
     <div {...restProps}>
