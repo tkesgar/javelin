@@ -14,6 +14,7 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   showCreator?: boolean;
   showTimestamp?: boolean;
   showRemove?: boolean;
+  labels: { key: string; color: string }[];
   onMove?: (direction: "left" | "right") => void;
   onTextUpdate?: (text: string) => void;
   onRemove?: () => void;
@@ -27,6 +28,7 @@ export default function BoardCard({
   showCreator = false,
   showTimestamp = false,
   showRemove = false,
+  labels = [],
   onMove,
   onTextUpdate,
   onRemove,
@@ -76,6 +78,7 @@ export default function BoardCard({
           <EditableContent
             className={classnames(style.CardContent, "mb-2")}
             initialText={card.content}
+            labels={labels}
             onChange={(text) => {
               if (onTextUpdate) {
                 onTextUpdate(text);
@@ -156,13 +159,16 @@ export default function BoardCard({
 type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
   initialText?: string;
   placeholder?: string;
+  labels?: BoardCardProps["labels"];
   onChange?: (text: string) => void;
   onTags?: (tags: string[]) => void;
 };
 
+// TODO Replace with ContentEditable
 function EditableContent({
   initialText = "",
   placeholder = null,
+  labels = [],
   onChange,
   onTags,
   className,
@@ -177,28 +183,28 @@ function EditableContent({
       return;
     }
 
-    const { tags, html } = processText(initialText);
+    const { tags, html } = processText(initialText, labels);
 
     if (onTags) {
       onTags(tags);
     }
 
     divRef.current.innerHTML = html;
-  }, [onTags, initialText]);
+  }, [onTags, initialText, labels]);
 
   React.useEffect(() => {
     if (!divRef.current) {
       return;
     }
 
-    const { tags, html } = processText(lastChangeText);
+    const { tags, html } = processText(lastChangeText, labels);
 
     if (onTags) {
       onTags(tags);
     }
 
     divRef.current.innerHTML = html;
-  }, [onTags, lastChangeText]);
+  }, [onTags, lastChangeText, labels]);
 
   return (
     <div
@@ -231,13 +237,35 @@ function EditableContent({
 }
 
 function processText(
-  text: string
+  text: string,
+  labels: BoardCardProps["labels"]
 ): {
   tags: string[];
   html: string;
 } {
   return {
     tags: [...(text.match(/#\w+/g) || [])],
-    html: text.replace(/#(\w+)/g, '<span class="Label Label-$1">#$1</span>'),
+    html: text.replace(/#(\w+)/g, (match, p1) => {
+      const color = labels.find((label) => label.key === p1)?.color;
+      return `<span class="Label" ${
+        color
+          ? `style="background-color: ${color}; color: ${colorYIQ(color)}"`
+          : ""
+      }>#${p1}</span>`;
+    }),
   };
+}
+
+const YIQ_TEXT_DARK = "#212529";
+const YIQ_TEXT_LIGHT = "#ffffff";
+const YIQ_CONTRASTED_THRESHOLD = 150;
+
+function colorYIQ(color, dark = YIQ_TEXT_DARK, light = YIQ_TEXT_LIGHT) {
+  const [r, g, b] = color
+    .slice(1)
+    .match(/.{2}/g)
+    .map((hex) => parseInt(hex, 16));
+
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= YIQ_CONTRASTED_THRESHOLD ? dark : light;
 }

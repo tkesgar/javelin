@@ -16,6 +16,10 @@ export interface Board {
     showTimestamp: boolean;
     removeCardOnlyOwner: boolean;
   };
+  labels: {
+    key: string;
+    color: string;
+  }[];
 }
 
 export interface User {
@@ -69,6 +73,7 @@ export function useBoard(boardId: string): Board {
               ...DEFAULT_BOARD_CONFIG,
               ...(data.config || {}),
             },
+            labels: data.labels || [],
           });
           debug("read board snapshot");
         } else {
@@ -226,6 +231,7 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
         ...DEFAULT_BOARD_CONFIG,
         ...(data.config || {}),
       },
+      labels: data.labels || [],
     });
   });
   debug("get my boards");
@@ -275,11 +281,12 @@ interface UpdateBoardData {
   title?: string;
   description?: string;
   config?: Board["config"];
+  labels?: Board["labels"];
 }
 
 export async function updateBoard(
   id: string,
-  { title, description, config }: UpdateBoardData
+  { title, description, config, labels }: UpdateBoardData
 ): Promise<void> {
   await db()
     .collection("boards")
@@ -288,6 +295,7 @@ export async function updateBoard(
       ...(title && { title }),
       ...(description && { description }),
       ...(config && { config }),
+      ...(labels && { labels }),
     });
   debug("updated board");
 }

@@ -23,12 +23,14 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
-import { Plus, Settings } from "react-feather";
+import { Plus, Settings, Trash2 } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
 import { Auth, useAuth } from "@/services/firebase/auth";
 import BoardCard from "./components/BoardCard";
+import debounce from "lodash/debounce";
+import ContentEditable from "./components/ContentEditable";
 
 export default function ViewBoardPage(): JSX.Element {
   const auth = useAuth() as Auth;
@@ -148,6 +150,9 @@ export default function ViewBoardPage(): JSX.Element {
                                     ? board.ownerId === auth?.uid
                                     : true
                                 }
+                                labels={
+                                  board.labels /* TODO use mapping to improve performance */
+                                }
                                 onMove={(direction) => {
                                   const newSectionId =
                                     sections[
@@ -231,16 +236,15 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
   const [config, setConfig] = React.useState<Board["config"]>({
     ...board.config,
   });
-  const [labels, setLabels] = React.useState<{ name: string; color: string }[]>(
-    []
-  );
-
-  const enableLabels = true;
+  const [labels, setLabels] = React.useState<Board["labels"]>([
+    ...board.labels,
+  ]);
 
   React.useEffect(() => {
     setInputTitle(board.title);
     setInputDescription(board.description || "");
     setConfig({ ...board.config });
+    setLabels([...board.labels]);
   }, [board]);
 
   const isBoardOwner = board.ownerId === auth?.uid;
@@ -257,6 +261,23 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
       },
     }).catch((error) => alert(error.message));
   }
+
+  function updateLabels(
+    updateFn: (currentLabels: Board["labels"]) => Board["labels"]
+  ): void {
+    setLabels(updateFn);
+    updateBoard(board.id, {
+      labels: updateFn(board.labels),
+    }).catch((error) => alert(error.message));
+  }
+
+  const updateLabelColor = debounce((key: string, color: string) => {
+    updateLabels((currentLabels) =>
+      currentLabels.map((label) =>
+        label.key === key ? { ...label, color } : label
+      )
+    );
+  }, 500);
 
   return (
     <>
@@ -349,32 +370,102 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
 
       <h2 className="h5 mb-3">Labels</h2>
       <div className="mb-4">
-        <Form.Group>
-          <Form.Check
-            type="switch"
-            id="boardSettings_enableLabels"
-            label="Enable card labels"
-          />
-        </Form.Group>
-        {enableLabels ? (
-          <>
-            <Button type="button" variant="primary" className="mb-3">
-              Add label
-            </Button>
-            {labels.length === 0 ? (
-              <div className="text-muted">
-                This board currently has no labels.
-              </div>
-            ) : (
-              <ul>
-                {labels.map((label) => (
-                  <li key={label.name}></li>
-                ))}
-              </ul>
-            )}
-          </>
-        ) : null}
+        <div className="mb-3">
+          {labels.length === 0 ? (
+            <div className="text-muted">
+              This board currently has no labels.
+            </div>
+          ) : (
+            <ul>
+              {labels.map((label) => (
+                <li key={label.key}>
+                  <span
+                    className={style.Label}
+                    style={{
+                      backgroundColor: label.color,
+                      color: colorYIQ(label.color),
+                    }}
+                  >
+                    #
+                    <ContentEditable
+                      className="d-inline-block"
+                      initialText={label.key}
+                      onContentChange={(text) => {
+                        updateLabels((currentLabels) =>
+                          currentLabels.map((l) =>
+                            l.key === label.key
+                              ? { key: text, color: l.color }
+                              : l
+                          )
+                        );
+                      }}
+                    />
+                  </span>
+                  <input
+                    type="color"
+                    className={classnames(style.LabelColorInput, "ml-1")}
+                    value={label.color}
+                    onChange={(evt) => {
+                      const color = evt.target.value;
+                      updateLabelColor(label.key, color);
+                    }}
+                  />
+                  {/* Use double click button like in card */}
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => {
+                      updateLabels((currentLabels) =>
+                        currentLabels.filter((l) => l.key !== label.key)
+                      );
+                    }}
+                  >
+                    <Trash2 size="16" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="primary"
+          onClick={() => {
+            let newLabel = `label_${labels.length + 1}`;
+            if (labels.find((label) => label.key === newLabel)) {
+              newLabel = newLabel + "_2";
+            }
+
+            updateLabels((currentLabels) => [
+              ...currentLabels,
+              {
+                key: newLabel,
+                color: "#888888",
+              },
+            ]);
+          }}
+          disabled={labels.length >= 10}
+        >
+          {labels.length < 10
+            ? "Add new label"
+            : "Maximum number of labels has been reached"}
+        </Button>
       </div>
     </>
   );
+}
+
+const YIQ_TEXT_DARK = "#212529";
+const YIQ_TEXT_LIGHT = "#ffffff";
+const YIQ_CONTRASTED_THRESHOLD = 150;
+
+function colorYIQ(color, dark = YIQ_TEXT_DARK, light = YIQ_TEXT_LIGHT) {
+  const [r, g, b] = color
+    .slice(1)
+    .match(/.{2}/g)
+    .map((hex) => parseInt(hex, 16));
+
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= YIQ_CONTRASTED_THRESHOLD ? dark : light;
 }

@@ -1,13 +1,11 @@
-@import "../../../styles/includes";
+@import "../includes";
 
 .Card {
   background-color: #ffefc1;
 }
 
 .CardContent {
-  font-size: 16px;
-  font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
-    "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
+  @include font-cursive();
   min-height: 2rem;
 }
 
@@ -36,6 +34,6 @@
 }
 
 .EditableContentContainer :global(.Label) {
+  @include label();
   padding: 0.1rem 0.2rem;
-  font-weight: 700;
 }

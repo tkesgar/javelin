@@ -1,0 +1,11 @@
+@import "../../styles/includes";
+
+@mixin font-cursive() {
+  font-size: 16px;
+  font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
+    "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
+}
+
+@mixin label() {
+  font-weight: 700;
+}

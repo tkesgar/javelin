@@ -1,4 +1,4 @@
-@import "../../styles/includes";
+@import "includes";
 
 @mixin line-clamp($amount: 1) {
   // https://css-tricks.com/almanac/properties/l/line-clamp/
@@ -64,19 +64,16 @@
   transition: $transition-base;
 }
 
-.EditableContentContainer {
-  position: relative;
-}
-
-.EditableContentPlaceholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  pointer-events: none;
-}
-
-.EditableContentContainer :global(.Label) {
+.Label {
+  @include font-cursive();
+  @include label();
   padding: 0.1rem 0.2rem;
-  font-weight: 700;
+}
+
+.LabelColorInput {
+  border: none;
+  background: transparent;
+  padding: 0 1px;
+  width: 21px;
+  vertical-align: top;
 }
