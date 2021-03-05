@@ -1,10 +1,10 @@
-import * as React from "react";
 import firebase from "firebase/app";
 import { createDebug } from "@/utils/log";
-import { Auth } from "./auth";
+import * as React from "react";
+import { Auth, useAuth } from "./auth";
 
 const db = () => firebase.firestore();
-
+const debug = createDebug("firebase-board");
 export interface Board {
   id: string;
   ownerId: string;
@@ -30,11 +30,14 @@ export interface User {
 
 export interface Section {
   id: string;
+  boardId: string;
   title: string;
 }
 
 export interface Card {
   id: string;
+  boardId: string;
+  sectionId: string;
   userId: string;
   content: string;
   timeCreated: number;
@@ -47,168 +50,77 @@ const DEFAULT_BOARD_CONFIG: Board["config"] = {
   removeCardOnlyOwner: false,
 };
 
-const debug = createDebug("firebase-board");
-
-export function useBoard(boardId: string): Board {
-  const [board, setBoard] = React.useState<Board>();
-
-  React.useEffect(() => {
-    if (!boardId) {
-      return;
-    }
-
-    return db()
-      .collection("boards")
-      .doc(boardId)
-      .onSnapshot((snapshot) => {
-        if (snapshot.exists) {
-          const data = snapshot.data();
-          setBoard({
-            id: snapshot.id,
-            ownerId: data.ownerId,
-            title: data.title,
-            description: data.description,
-            sectionCount: data.sectionCount,
-            config: {
-              ...DEFAULT_BOARD_CONFIG,
-              ...(data.config || {}),
-            },
-            labels: data.labels || [],
-          });
-          debug("read board snapshot");
-        } else {
-          setBoard(null);
-        }
-      });
-  }, [boardId]);
-
-  return board;
+function toBoard({
+  data,
+  id,
+}: {
+  data: firebase.firestore.DocumentData;
+  id: string;
+}): Board {
+  return {
+    id,
+    ownerId: data.ownerId,
+    title: data.title,
+    sectionCount: data.sectionCount,
+    description: data.description || null,
+    config: {
+      ...DEFAULT_BOARD_CONFIG,
+      ...(data.config || {}),
+    },
+    labels: data.labels || [],
+  };
 }
 
-export function useBoardSections(boardId: string): Section[] {
-  const [sections, setSections] = React.useState<Section[]>();
-
-  React.useEffect(() => {
-    if (!boardId) {
-      return;
-    }
-
-    return db()
-      .collection("boards")
-      .doc(boardId)
-      .collection("sections")
-      .onSnapshot((querySnapshot) => {
-        const newSections: typeof sections = [];
-
-        querySnapshot.forEach((result) => {
-          const data = result.data();
-          newSections.push({
-            id: result.id,
-            title: data.title,
-          });
-        });
-
-        setSections(newSections);
-        debug("read board sections snapshot");
-      });
-  }, [boardId]);
-
-  return sections;
+function toSection({
+  data,
+  id,
+  boardId,
+}: {
+  data: firebase.firestore.DocumentData;
+  id: string;
+  boardId: string;
+}): Section {
+  return {
+    id,
+    boardId,
+    title: data.title,
+  };
 }
 
-export function useBoardUsers(boardId: string | false): User[] {
-  const [users, setUsers] = React.useState<User[]>();
-
-  React.useEffect(() => {
-    if (!boardId) {
-      return;
-    }
-
-    return db()
-      .collection("boards")
-      .doc(boardId)
-      .collection("users")
-      .onSnapshot((querySnapshot) => {
-        const newUsers: typeof users = [];
-
-        querySnapshot.forEach((result) => {
-          const data = result.data();
-          newUsers.push({
-            id: result.id,
-            displayName: data.displayName,
-            photoURL: data.photoURL,
-          });
-        });
-
-        setUsers(newUsers);
-        debug("read board users snapshot");
-      });
-  }, [boardId]);
-
-  return users;
+function toCard({
+  data,
+  id,
+  boardId,
+  sectionId,
+}: {
+  data: firebase.firestore.DocumentData;
+  id: string;
+  boardId: string;
+  sectionId: string;
+}): Card {
+  return {
+    id,
+    boardId,
+    sectionId,
+    userId: data.userId,
+    content: data.content,
+    timeCreated: timestampToMiliseconds(data.timeCreated),
+    timeUpdated: timestampToMiliseconds(data.timeUpdated),
+  };
 }
 
-export function useBoardCards(boardId: string): Record<string, Card[]> {
-  const [sectionCards, setSectionCards] = React.useState<
-    Record<string, Card[]>
-  >({});
-
-  React.useEffect(() => {
-    if (!boardId) {
-      return;
-    }
-
-    const unsubscribes: (() => void)[] = [
-      db()
-        .collection("boards")
-        .doc(boardId)
-        .collection("sections")
-        .onSnapshot((querySectionSnapshot) => {
-          querySectionSnapshot.forEach((sectionResult) => {
-            unsubscribes.push(
-              sectionResult.ref
-                .collection("cards")
-                .onSnapshot((queryCardSnapshot) => {
-                  const newCards: Card[] = [];
-
-                  queryCardSnapshot.forEach((cardResult) => {
-                    const data = cardResult.data();
-
-                    // Timestamps can be null if data is from cache.
-                    // Here we use an approximation Date.now(), since it is
-                    // probably the state when the card is first created.
-                    const timeCreated = data.timeCreated
-                      ? timestampToMiliseconds(data.timeCreated)
-                      : Date.now();
-                    const timeUpdated = data.timeUpdated
-                      ? timestampToMiliseconds(data.timeUpdated)
-                      : Date.now();
-
-                    newCards.push({
-                      id: cardResult.id,
-                      userId: data.userId,
-                      content: data.content,
-                      timeCreated,
-                      timeUpdated,
-                    });
-                  });
-
-                  setSectionCards((oldSectionCards) => ({
-                    ...oldSectionCards,
-                    [sectionResult.id]: newCards,
-                  }));
-                  debug("read cards snapshot");
-                })
-            );
-          });
-          debug("read sections snapshot");
-        }),
-    ];
-
-    return () => unsubscribes.forEach((fn) => fn());
-  }, [boardId]);
-
-  return sectionCards;
+function toUser({
+  data,
+  id,
+}: {
+  data: firebase.firestore.DocumentData;
+  id: string;
+}): User {
+  return {
+    id,
+    displayName: data.displayName,
+    photoURL: data.photoURL,
+  };
 }
 
 export async function getMyBoards(uid: string): Promise<Board[]> {
@@ -220,46 +132,39 @@ export async function getMyBoards(uid: string): Promise<Board[]> {
     .get();
 
   querySnapshot.forEach((result) => {
-    const data = result.data();
-    boards.push({
-      id: result.id,
-      ownerId: data.ownerId,
-      description: data.description,
-      title: data.title,
-      sectionCount: data.sectionCount,
-      config: {
-        ...DEFAULT_BOARD_CONFIG,
-        ...(data.config || {}),
-      },
-      labels: data.labels || [],
-    });
+    boards.push(
+      toBoard({
+        id: result.id,
+        data: result.data(),
+      })
+    );
   });
   debug("get my boards");
 
   return boards;
 }
 
-interface CreateBoardData {
-  title: string;
-  description: string;
+export async function createBoard({
+  userId,
+  title,
+  sectionTitles,
+  description = null,
+  config = {},
+}: {
+  userId: string;
+  title: Board["title"];
   sectionTitles: string[];
-}
-
-export async function createBoard(
-  userId: string,
-  data: CreateBoardData,
-  config: Partial<Board["config"]> = {}
-): Promise<string> {
-  const { title, description, sectionTitles } = data;
-
+  description?: Board["description"];
+  config?: Partial<Board["config"]>;
+}): Promise<string> {
   const batch = db().batch();
 
   const boardRef = db().collection("boards").doc();
   batch.set(boardRef, {
     title,
-    description,
     ownerId: userId,
     sectionCount: sectionTitles.length,
+    description,
     config: {
       ...DEFAULT_BOARD_CONFIG,
       ...config,
@@ -277,62 +182,100 @@ export async function createBoard(
   return boardRef.id;
 }
 
-interface UpdateBoardData {
-  title?: string;
-  description?: string;
+export async function updateBoard({
+  id,
+  title,
+  description,
+  config,
+  labels,
+}: {
+  id: string;
+  title?: Board["title"];
+  description?: Board["description"];
   config?: Board["config"];
   labels?: Board["labels"];
-}
-
-export async function updateBoard(
-  id: string,
-  { title, description, config, labels }: UpdateBoardData
-): Promise<void> {
+}): Promise<void> {
   await db()
     .collection("boards")
     .doc(id)
-    .update({
-      ...(title && { title }),
-      ...(description && { description }),
-      ...(config && { config }),
-      ...(labels && { labels }),
-    });
+    .update(pick({ title, description, config, labels }));
   debug("updated board");
 }
 
-interface CreateCardData {
+export async function createCard({
+  auth,
+  boardId,
+  sectionId,
+  content = "",
+}: {
+  auth: Auth;
   boardId: string;
   sectionId: string;
   userId: string;
+  content?: string;
+}): Promise<void> {
+  await db()
+    .batch()
+    .set(
+      db()
+        .collection("boards")
+        .doc(boardId)
+        .collection("sections")
+        .doc(sectionId)
+        .collection("cards")
+        .doc(),
+      {
+        userId: auth.uid,
+        content,
+        timeCreated: firebase.firestore.FieldValue.serverTimestamp(),
+        timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+      }
+    )
+    .set(
+      db().collection("boards").doc(boardId).collection("users").doc(auth.uid),
+      {
+        displayName: auth.displayName,
+        photoURL: auth.photoURL,
+      }
+    )
+    .commit();
+  debug("created card");
 }
 
-export async function createCard({
+export async function updateCard({
   boardId,
   sectionId,
-  userId,
-}: CreateCardData): Promise<string> {
-  const ref = await db()
+  cardId,
+  content,
+}: {
+  boardId: string;
+  sectionId: string;
+  cardId: string;
+  content?: string;
+}): Promise<void> {
+  await db()
     .collection("boards")
     .doc(boardId)
     .collection("sections")
     .doc(sectionId)
     .collection("cards")
-    .add({
-      userId,
-      content: "",
-      timeCreated: firebase.firestore.FieldValue.serverTimestamp(),
+    .doc(cardId)
+    .update({
+      ...pick({ content }),
       timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
     });
-  debug("created card");
-
-  return ref.id;
+  debug("updated card");
 }
 
-export async function removeCard(
-  boardId: string,
-  sectionId: string,
-  cardId: string
-): Promise<void> {
+export async function removeCard({
+  boardId,
+  sectionId,
+  cardId,
+}: {
+  boardId: string;
+  sectionId: string;
+  cardId: string;
+}): Promise<void> {
   await db()
     .collection("boards")
     .doc(boardId)
@@ -344,51 +287,27 @@ export async function removeCard(
   debug("removed card");
 }
 
-interface UpdateCardData {
+export async function moveCard({
+  boardId,
+  cardId,
+  sectionIdFrom: sectionId,
+  sectionIdTo: newSectionId,
+}: {
   boardId: string;
-  sectionId: string;
   cardId: string;
-  content: string;
-}
-
-export async function updateCard(data: UpdateCardData): Promise<void> {
-  const { boardId, sectionId, cardId, content } = data;
-
-  await db()
-    .collection("boards")
-    .doc(boardId)
-    .collection("sections")
-    .doc(sectionId)
-    .collection("cards")
-    .doc(cardId)
-    .update({
-      content,
-      timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-  debug("updated card");
-}
-
-interface UpdateCardSectionData {
-  boardId: string;
-  sectionId: string;
-  cardId: string;
-  newSectionId: string;
-}
-
-export async function updateCardSection(
-  data: UpdateCardSectionData
-): Promise<void> {
-  const { boardId, sectionId, cardId, newSectionId } = data;
-
-  const cardSnapshot = await db()
-    .collection("boards")
-    .doc(boardId)
-    .collection("sections")
-    .doc(sectionId)
-    .collection("cards")
-    .doc(cardId)
-    .get();
-  const cardData = cardSnapshot.data();
+  sectionIdFrom: string;
+  sectionIdTo: string;
+}): Promise<void> {
+  const cardData = (
+    await db()
+      .collection("boards")
+      .doc(boardId)
+      .collection("sections")
+      .doc(sectionId)
+      .collection("cards")
+      .doc(cardId)
+      .get()
+  ).data();
 
   const batch = db().batch();
 
@@ -416,30 +335,180 @@ export async function updateCardSection(
   });
 
   await batch.commit();
-  debug("updated card section");
+  debug("move card");
 }
 
-export async function updateBoardUserFromAuth(
-  boardId: string,
-  auth: Auth
-): Promise<void> {
-  await db()
-    .collection("boards")
-    .doc(boardId)
-    .collection("users")
-    .doc(auth.uid)
-    .set({
-      displayName: auth.displayName,
-      photoURL: auth.photoURL,
-    });
-  debug("update board user from auth");
+export function useBoard(boardId: string): Board {
+  const [board, setBoard] = React.useState<Board>();
+
+  React.useEffect(() => {
+    if (!boardId) {
+      return;
+    }
+
+    return db()
+      .collection("boards")
+      .doc(boardId)
+      .onSnapshot((snapshot) => {
+        if (snapshot.exists) {
+          setBoard(
+            toBoard({
+              id: snapshot.id,
+              data: snapshot.data(),
+            })
+          );
+          debug("read board snapshot");
+        } else {
+          setBoard(null);
+        }
+      });
+  }, [boardId]);
+
+  return board;
+}
+
+export function useBoardSections(boardId: string): Section[] {
+  const [sections, setSections] = React.useState<Section[]>();
+
+  React.useEffect(() => {
+    if (!boardId) {
+      return;
+    }
+
+    return db()
+      .collection("boards")
+      .doc(boardId)
+      .collection("sections")
+      .onSnapshot((querySnapshot) => {
+        const newSections: typeof sections = [];
+
+        querySnapshot.forEach((result) => {
+          newSections.push(
+            toSection({
+              id: result.id,
+              data: result.data(),
+              boardId,
+            })
+          );
+        });
+
+        setSections(newSections);
+        debug("read board sections snapshot");
+      });
+  }, [boardId]);
+
+  return sections;
+}
+
+export function useBoardUsers(boardId: string | false): User[] {
+  const auth = useAuth();
+  const [users, setUsers] = React.useState<User[]>();
+
+  React.useEffect(() => {
+    if (!auth || !boardId) {
+      return;
+    }
+
+    return db()
+      .collection("boards")
+      .doc(boardId)
+      .collection("users")
+      .onSnapshot((querySnapshot) => {
+        const newUsers: typeof users = [];
+
+        querySnapshot.forEach((result) => {
+          newUsers.push(
+            toUser({
+              data: result.data(),
+              id: result.id,
+            })
+          );
+        });
+
+        setUsers(newUsers);
+        debug("read board users snapshot");
+      });
+  }, [auth, boardId]);
+
+  return users;
+}
+
+export function useBoardCards(boardId: string): Record<string, Card[]> {
+  const [sectionCards, setSectionCards] = React.useState<
+    Record<string, Card[]>
+  >({});
+
+  React.useEffect(() => {
+    if (!boardId) {
+      return;
+    }
+
+    const unsubscribes = [
+      db()
+        .collection("boards")
+        .doc(boardId)
+        .collection("sections")
+        .onSnapshot((querySectionSnapshot) => {
+          querySectionSnapshot.forEach((sectionResult) => {
+            unsubscribes.push(
+              sectionResult.ref
+                .collection("cards")
+                .onSnapshot((queryCardSnapshot) => {
+                  const newCards: Card[] = [];
+
+                  queryCardSnapshot.forEach((cardResult) => {
+                    newCards.push(
+                      toCard({
+                        data: cardResult.data(),
+                        id: cardResult.id,
+                        boardId: boardId,
+                        sectionId: sectionResult.id,
+                      })
+                    );
+                  });
+
+                  setSectionCards((oldSectionCards) => ({
+                    ...oldSectionCards,
+                    [sectionResult.id]: newCards,
+                  }));
+                  debug("read section cards snapshot");
+                })
+            );
+          });
+          debug("read sections snapshot");
+        }),
+    ];
+
+    return () => unsubscribes.forEach((fn) => fn());
+  }, [boardId]);
+
+  return sectionCards;
+}
+
+function pick(objIn: Record<string, unknown>): Record<string, unknown> {
+  const objOut = {};
+
+  for (const [key, value] of Object.entries(objIn)) {
+    if (typeof value === "undefined") {
+      continue;
+    }
+    objOut[key] = value;
+  }
+
+  return objOut;
 }
 
 function timestampToMiliseconds(timestamp: {
   seconds: number;
   nanoseconds: number;
 }): number {
-  const { seconds, nanoseconds } = timestamp;
+  // Timestamps can be null if data is from cache.
+  // Here we use an approximation Date.now(), since it is
+  // probably the state when the card is first created.
+  if (!timestamp) {
+    return Date.now();
+  }
 
+  const { seconds, nanoseconds } = timestamp;
   return seconds * 1000 + Math.trunc(nanoseconds / 1000000);
 }

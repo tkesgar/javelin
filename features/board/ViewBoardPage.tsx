@@ -3,9 +3,8 @@ import {
   createCard,
   removeCard,
   updateBoard,
-  updateBoardUserFromAuth,
   updateCard,
-  updateCardSection,
+  moveCard,
   useBoard,
   useBoardCards,
   useBoardSections,
@@ -33,27 +32,13 @@ import debounce from "lodash/debounce";
 import ContentEditable from "./components/ContentEditable";
 
 export default function ViewBoardPage(): JSX.Element {
-  const auth = useAuth() as Auth;
+  const auth = useAuth();
   const router = useRouter();
   const board = useBoard(router.query.boardId as string);
   const sections = useBoardSections(router.query.boardId as string);
   const sectionCards = useBoardCards(router.query.boardId as string);
-  const users = useBoardUsers(auth && (router.query.boardId as string));
+  const users = useBoardUsers(router.query.boardId as string);
   const [showSettings, setShowSettings] = React.useState(false);
-
-  React.useEffect(() => {
-    const boardId = router.query.boardId as string;
-    if (!boardId || !users || !auth) {
-      return;
-    }
-
-    const currentUser = users.find((user) => user.id === auth.uid);
-    if (!currentUser) {
-      updateBoardUserFromAuth(boardId, auth).catch((error) =>
-        console.error(error)
-      );
-    }
-  }, [router, auth, users]);
 
   function getSectionIndex(sectionId: string): number {
     return sections.findIndex((section) => section.id === sectionId);
@@ -112,7 +97,12 @@ export default function ViewBoardPage(): JSX.Element {
                           block
                           className="mb-3"
                           onClick={() => {
+                            if (!auth) {
+                              throw new Error(`User is not authenticated`);
+                            }
+
                             createCard({
+                              auth,
                               boardId: board.id,
                               sectionId: section.id,
                               userId: auth.uid,
@@ -147,7 +137,7 @@ export default function ViewBoardPage(): JSX.Element {
                                 showTimestamp={board.config.showTimestamp}
                                 showRemove={
                                   board.config.removeCardOnlyOwner
-                                    ? board.ownerId === auth?.uid
+                                    ? board.ownerId === (auth && auth.uid)
                                     : true
                                 }
                                 labels={
@@ -160,11 +150,11 @@ export default function ViewBoardPage(): JSX.Element {
                                         (direction === "left" ? -1 : 1)
                                     ].id;
 
-                                  updateCardSection({
+                                  moveCard({
                                     boardId: board.id,
-                                    sectionId: section.id,
+                                    sectionIdFrom: section.id,
                                     cardId: card.id,
-                                    newSectionId,
+                                    sectionIdTo: newSectionId,
                                   }).catch((error) => alert(error.message));
                                 }}
                                 onTextUpdate={(text) => {
@@ -176,11 +166,11 @@ export default function ViewBoardPage(): JSX.Element {
                                   }).catch((error) => alert(error.message));
                                 }}
                                 onRemove={() => {
-                                  removeCard(
-                                    board.id,
-                                    section.id,
-                                    card.id
-                                  ).catch((error) => alert(error.message));
+                                  removeCard({
+                                    boardId: board.id,
+                                    sectionId: section.id,
+                                    cardId: card.id,
+                                  }).catch((error) => alert(error.message));
                                 }}
                               />
                             );
@@ -254,7 +244,8 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
       ...currentConfig,
       [name]: value,
     }));
-    updateBoard(board.id, {
+    updateBoard({
+      id: board.id,
       config: {
         ...board.config,
         [name]: value,
@@ -266,7 +257,8 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
     updateFn: (currentLabels: Board["labels"]) => Board["labels"]
   ): void {
     setLabels(updateFn);
-    updateBoard(board.id, {
+    updateBoard({
+      id: board.id,
       labels: updateFn(board.labels),
     }).catch((error) => alert(error.message));
   }
@@ -292,7 +284,8 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
         onSubmit={(evt) => {
           evt.preventDefault();
 
-          updateBoard(board.id, {
+          updateBoard({
+            id: board.id,
             title: inputTitle.trim(),
             description: inputDescription.trim() || null,
           }).catch((error) => alert(error.message));
