@@ -9,6 +9,10 @@
   min-height: 2rem;
 }
 
+.CardContent :global(.Label) {
+  @include label();
+}
+
 .CardUserAvatar {
   width: 1rem;
   height: 1rem;
@@ -19,21 +23,4 @@
 
 .CardDelete {
   transition: $transition-base;
-}
-
-.EditableContentContainer {
-  position: relative;
-}
-
-.EditableContentPlaceholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  pointer-events: none;
-}
-
-.EditableContentContainer :global(.Label) {
-  @include label();
-  padding: 0.1rem 0.2rem;
 }

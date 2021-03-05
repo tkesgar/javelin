@@ -6,6 +6,7 @@ import style from "./BoardCard.module.scss";
 import classnames from "classnames";
 import day from "dayjs";
 import { colorYIQ } from "@/utils/color";
+import ContentEditable from "./ContentEditable";
 
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
@@ -37,6 +38,13 @@ export default function BoardCard({
 }: BoardCardProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
+  const transformHTMLCallback = React.useCallback(
+    (text: string) => {
+      return colorizeLabels(text, labelColors);
+    },
+    [labelColors]
+  );
+
   React.useEffect(() => {
     if (!confirmDelete) {
       return;
@@ -67,11 +75,11 @@ export default function BoardCard({
           <ChevronLeft size="16" />
         </Button>
         <div className="flex-fill">
-          <EditableContent
+          <ContentEditable
             className={classnames(style.CardContent, "mb-2")}
             initialText={card.content}
-            labelColors={labelColors}
-            onChange={(text) => {
+            transformHTML={transformHTMLCallback}
+            onContentChange={(text) => {
               if (onTextUpdate) {
                 onTextUpdate(text);
               }
@@ -148,104 +156,18 @@ export default function BoardCard({
   );
 }
 
-type EditableContentProps = React.ComponentPropsWithoutRef<"div"> & {
-  initialText?: string;
-  placeholder?: string;
-  labelColors?: Record<string, string>;
-  onChange?: (text: string) => void;
-  onTags?: (tags: string[]) => void;
-};
-
-// TODO Replace with ContentEditable
-function EditableContent({
-  initialText = "",
-  placeholder = null,
-  labelColors = {},
-  onChange,
-  onTags,
-  className,
-  ...restProps
-}: EditableContentProps): JSX.Element {
-  const divRef = React.useRef<HTMLDivElement>();
-  const [text, setText] = React.useState(initialText);
-  const [lastChangeText, setLastChangeText] = React.useState(initialText);
-
-  React.useEffect(() => {
-    if (!divRef.current) {
-      return;
-    }
-
-    const { tags, html } = processText(initialText, labelColors);
-
-    if (onTags) {
-      onTags(tags);
-    }
-
-    divRef.current.innerHTML = html;
-  }, [onTags, initialText, labelColors]);
-
-  React.useEffect(() => {
-    if (!divRef.current) {
-      return;
-    }
-
-    const { tags, html } = processText(lastChangeText, labelColors);
-
-    if (onTags) {
-      onTags(tags);
-    }
-
-    divRef.current.innerHTML = html;
-  }, [onTags, lastChangeText, labelColors]);
-
-  return (
-    <div
-      className={classnames(style.EditableContentContainer, className)}
-      {...restProps}
-    >
-      {placeholder && text.length === 0 ? (
-        <div
-          className={classnames(style.EditableContentPlaceholder, "text-muted")}
-        >
-          {placeholder}
-        </div>
-      ) : null}
-      <div
-        ref={divRef}
-        contentEditable
-        onInput={() => setText(divRef.current.innerText)}
-        onBlur={() => {
-          if (onChange) {
-            const currentText = divRef.current.innerText;
-            if (currentText !== lastChangeText) {
-              setLastChangeText(currentText);
-              onChange(currentText);
-            }
-          }
-        }}
-      />
-    </div>
-  );
-}
-
-function processText(
+function colorizeLabels(
   text: string,
   labelColors: Record<string, string>
-): {
-  tags: string[];
-  html: string;
-} {
-  return {
-    tags: [...(text.match(/#\w+/g) || [])],
-    html: text.replace(/#(\w+)/g, (match, p1) => {
-      const color = labelColors[p1];
-      return `<span class="Label" ${
-        color
-          ? `style="background-color: ${color}; color: ${colorYIQ(color)}"`
-          : ""
-      }>#${p1}</span>`;
-    }),
-  };
+): string {
+  return text.replace(/#(\w+)/g, (match, p1) => {
+    const color = labelColors[p1];
+    return `<span class="Label" ${
+      color
+        ? `style="background-color: ${color}; color: ${colorYIQ(color)}"`
+        : ""
+    }>#${p1}</span>`;
+  });
 }
 
 function formatTimestamp(ts: number): string {
