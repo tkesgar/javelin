@@ -36,9 +36,6 @@ export default function BoardCard({
   ...restProps
 }: BoardCardProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
-  const [cardTime, setCardTime] = React.useState<string>(
-    `${day().diff(card.timeUpdated, "m")}m ago`
-  );
 
   React.useEffect(() => {
     if (!confirmDelete) {
@@ -52,13 +49,7 @@ export default function BoardCard({
     return () => clearTimeout(timeout);
   }, [confirmDelete]);
 
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      setCardTime(`${day().diff(card.timeUpdated, "m")}m ago`);
-    }, 60 * 1000);
-
-    return () => clearTimeout(timeout);
-  }, [card]);
+  const cardTime = formatTimestamp(card.timeUpdated);
 
   return (
     <div {...restProps}>
@@ -255,4 +246,14 @@ function processText(
       }>#${p1}</span>`;
     }),
   };
+}
+
+function formatTimestamp(ts: number): string {
+  const minutes = day().diff(ts, "m");
+  if (minutes < 24 * 60) {
+    return `${minutes}m ago`;
+  }
+
+  const days = day().diff(ts, "d");
+  return `${days}d ago`;
 }
