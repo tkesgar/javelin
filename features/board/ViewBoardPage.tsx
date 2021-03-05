@@ -30,6 +30,7 @@ import { useAuth } from "@/services/firebase/auth";
 import BoardCard from "./components/BoardCard";
 import debounce from "lodash/debounce";
 import ContentEditable from "./components/ContentEditable";
+import { colorYIQ } from "@/utils/color";
 
 export default function ViewBoardPage(): JSX.Element {
   const auth = useAuth();
@@ -39,6 +40,16 @@ export default function ViewBoardPage(): JSX.Element {
   const sectionCards = useBoardCards(router.query.boardId as string);
   const users = useBoardUsers(router.query.boardId as string);
   const [showSettings, setShowSettings] = React.useState(false);
+
+  const labelColorMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+
+    for (const label of board?.labels || []) {
+      map[label.key] = label.color;
+    }
+
+    return map;
+  }, [board]);
 
   function getSectionIndex(sectionId: string): number {
     return sections.findIndex((section) => section.id === sectionId);
@@ -140,9 +151,7 @@ export default function ViewBoardPage(): JSX.Element {
                                     ? board.ownerId === (auth && auth.uid)
                                     : true
                                 }
-                                labels={
-                                  board.labels /* TODO use mapping to improve performance */
-                                }
+                                labelColors={labelColorMap}
                                 onMove={(direction) => {
                                   const newSectionId =
                                     sections[
@@ -447,18 +456,4 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
       </div>
     </>
   );
-}
-
-const YIQ_TEXT_DARK = "#212529";
-const YIQ_TEXT_LIGHT = "#ffffff";
-const YIQ_CONTRASTED_THRESHOLD = 150;
-
-function colorYIQ(color, dark = YIQ_TEXT_DARK, light = YIQ_TEXT_LIGHT) {
-  const [r, g, b] = color
-    .slice(1)
-    .match(/.{2}/g)
-    .map((hex) => parseInt(hex, 16));
-
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-  return yiq >= YIQ_CONTRASTED_THRESHOLD ? dark : light;
 }
