@@ -22,7 +22,7 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
-import { Plus, Settings, Trash2 } from "react-feather";
+import { Plus, Settings } from "react-feather";
 import style from "./ViewBoardPage.module.scss";
 import classnames from "classnames";
 import MainNavbar from "@/components/MainNavbar";
@@ -31,6 +31,7 @@ import BoardCard from "./components/BoardCard";
 import debounce from "lodash/debounce";
 import ContentEditable from "./components/ContentEditable";
 import { colorYIQ } from "@/utils/color";
+import RemoveButton from "./components/RemoveButton";
 
 export default function ViewBoardPage(): JSX.Element {
   const auth = useAuth();
@@ -45,6 +46,10 @@ export default function ViewBoardPage(): JSX.Element {
     const map: Record<string, string> = {};
 
     for (const label of board?.labels || []) {
+      if (map[label.key]) {
+        continue;
+      }
+
       map[label.key] = label.color;
     }
 
@@ -272,10 +277,10 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
     }).catch((error) => alert(error.message));
   }
 
-  const updateLabelColor = debounce((key: string, color: string) => {
+  const updateLabelColor = debounce((index: number, color: string) => {
     updateLabels((currentLabels) =>
-      currentLabels.map((label) =>
-        label.key === key ? { ...label, color } : label
+      currentLabels.map((label, i) =>
+        i === index ? { ...label, color } : label
       )
     );
   }, 500);
@@ -378,53 +383,54 @@ function BoardSettings({ board }: BoardSettingsProps): JSX.Element {
               This board currently has no labels.
             </div>
           ) : (
-            <ul>
-              {labels.map((label) => (
-                <li key={label.key}>
-                  <span
-                    className={style.Label}
-                    style={{
-                      backgroundColor: label.color,
-                      color: colorYIQ(label.color),
-                    }}
-                  >
-                    #
-                    <ContentEditable
-                      className="d-inline-block"
-                      initialText={label.key}
-                      onContentChange={(text) => {
+            <ul className="list-unstyled">
+              {labels.map((label, index) => (
+                <li key={`${label.key}-${index}`}>
+                  <div className="d-flex align-items-center mb-2">
+                    <div className="mr-1">
+                      <span
+                        className={style.Label}
+                        style={{
+                          backgroundColor: label.color,
+                          color: colorYIQ(label.color),
+                        }}
+                      >
+                        #
+                        <ContentEditable
+                          className="d-inline-block"
+                          initialText={label.key}
+                          onContentChange={(text) => {
+                            updateLabels((currentLabels) =>
+                              currentLabels.map((l, i) =>
+                                i === index ? { key: text, color: l.color } : l
+                              )
+                            );
+                          }}
+                        />
+                      </span>
+                    </div>
+                    <input
+                      type="color"
+                      className={classnames(style.LabelColorInput, "mr-1")}
+                      value={label.color}
+                      onChange={(evt) => {
+                        const color = evt.target.value;
+                        updateLabelColor(index, color);
+                      }}
+                    />
+                    <RemoveButton
+                      onRemove={() => {
                         updateLabels((currentLabels) =>
-                          currentLabels.map((l) =>
-                            l.key === label.key
-                              ? { key: text, color: l.color }
-                              : l
-                          )
+                          currentLabels.filter((l, i) => i !== index)
                         );
                       }}
                     />
-                  </span>
-                  <input
-                    type="color"
-                    className={classnames(style.LabelColorInput, "ml-1")}
-                    value={label.color}
-                    onChange={(evt) => {
-                      const color = evt.target.value;
-                      updateLabelColor(label.key, color);
-                    }}
-                  />
-                  {/* Use double click button like in card */}
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => {
-                      updateLabels((currentLabels) =>
-                        currentLabels.filter((l) => l.key !== label.key)
-                      );
-                    }}
-                  >
-                    <Trash2 size="16" />
-                  </Button>
+                    {labels.findIndex((l) => l.key === label.key) !== index ? (
+                      <span className="text-muted d-inline-block ml-2">
+                        Duplicate labels will be ignored
+                      </span>
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ul>

@@ -1,12 +1,13 @@
 import { Card, User } from "@/services/firebase/board";
 import * as React from "react";
 import { Button } from "react-bootstrap";
-import { AlertCircle, ChevronLeft, ChevronRight, Trash2 } from "react-feather";
+import { ChevronLeft, ChevronRight } from "react-feather";
 import style from "./BoardCard.module.scss";
 import classnames from "classnames";
 import day from "dayjs";
 import { colorYIQ } from "@/utils/color";
 import ContentEditable from "./ContentEditable";
+import RemoveButton from "./RemoveButton";
 
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
@@ -116,41 +117,7 @@ export default function BoardCard({
             <small className="text-muted">{cardTime}</small>
           ) : null}
         </div>
-        {showRemove ? (
-          <Button
-            type="button"
-            size="sm"
-            variant={confirmDelete ? "danger" : "warning"}
-            className={classnames(style.CardDelete, "rounded-circle px-0")}
-            style={{ width: "28px" }}
-            onClick={() => {
-              if (!confirmDelete) {
-                setConfirmDelete(true);
-                return;
-              }
-
-              if (onRemove) {
-                onRemove();
-              }
-            }}
-            onContextMenu={(evt) => {
-              evt.preventDefault();
-              setConfirmDelete(false);
-            }}
-          >
-            {confirmDelete ? (
-              <>
-                <AlertCircle size="16" style={{ verticalAlign: "text-top" }} />
-                <span className="sr-only">Are you sure?</span>
-              </>
-            ) : (
-              <>
-                <Trash2 size="16" style={{ verticalAlign: "text-top" }} />
-                <span className="sr-only">Remove</span>
-              </>
-            )}
-          </Button>
-        ) : null}
+        {showRemove ? <RemoveButton onRemove={onRemove} /> : null}
       </div>
     </div>
   );
