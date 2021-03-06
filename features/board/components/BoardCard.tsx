@@ -5,9 +5,9 @@ import { ChevronLeft, ChevronRight } from "react-feather";
 import style from "./BoardCard.module.scss";
 import classnames from "classnames";
 import day from "dayjs";
-import { colorYIQ } from "@/utils/color";
 import ContentEditable from "./ContentEditable";
 import RemoveButton from "./RemoveButton";
+import { BoardTag, colorizeLabels } from "./BoardTag";
 
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
@@ -18,6 +18,7 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   showTimestamp?: boolean;
   showRemove?: boolean;
   labelColors?: Record<string, string>;
+  tags?: string[];
   onMove?: (direction: "left" | "right") => void;
   onTextUpdate?: (text: string) => void;
   onRemove?: () => void;
@@ -32,17 +33,17 @@ export default function BoardCard({
   showTimestamp = false,
   showRemove = false,
   labelColors = {},
+  tags = [],
   onMove,
   onTextUpdate,
   onRemove,
+  className,
   ...restProps
 }: BoardCardProps): JSX.Element {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const transformHTMLCallback = React.useCallback(
-    (text: string) => {
-      return colorizeLabels(text, labelColors);
-    },
+    (text: string) => colorizeLabels(text, labelColors),
     [labelColors]
   );
 
@@ -61,7 +62,14 @@ export default function BoardCard({
   const cardTime = formatTimestamp(card.timeCreated);
 
   return (
-    <div {...restProps}>
+    <div className={classnames(style.Card, className, "py-2")} {...restProps}>
+      <div className="mx-2 mb-2">
+        {tags.map((tag) => (
+          <BoardTag key={tag} hash color={labelColors[tag]} className="mr-1">
+            {tag}
+          </BoardTag>
+        ))}
+      </div>
       <div className="d-flex align-items-center mb-2">
         <Button
           type="button"
@@ -113,28 +121,12 @@ export default function BoardCard({
               )}
             />
           ) : null}
-          {showTimestamp ? (
-            <small className="text-muted">{cardTime}</small>
-          ) : null}
+          {showTimestamp ? <small>{cardTime}</small> : null}
         </div>
         {showRemove ? <RemoveButton onRemove={onRemove} /> : null}
       </div>
     </div>
   );
-}
-
-function colorizeLabels(
-  text: string,
-  labelColors: Record<string, string>
-): string {
-  return text.replace(/#(\w+)/g, (match, p1) => {
-    const color = labelColors[p1];
-    return `<span class="Label" ${
-      color
-        ? `style="background-color: ${color}; color: ${colorYIQ(color)}"`
-        : ""
-    }>#${p1}</span>`;
-  });
 }
 
 function formatTimestamp(ts: number): string {

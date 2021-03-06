@@ -7,6 +7,7 @@ import {
   useBoardCards,
   useBoardSections,
   useBoardUsers,
+  DEFAULT_TAG_COLOR,
 } from "@/services/firebase/board";
 import { useRouter } from "next/router";
 import * as React from "react";
@@ -18,6 +19,7 @@ import MainNavbar from "@/components/MainNavbar";
 import { useAuth } from "@/services/firebase/auth";
 import BoardCard from "./components/BoardCard";
 import BoardSettingsModal from "./BoardSettingsModal";
+import dayjs from "dayjs";
 
 export default function ViewBoardPage(): JSX.Element {
   const auth = useAuth();
@@ -39,6 +41,10 @@ export default function ViewBoardPage(): JSX.Element {
       map[label.key] = label.color;
     }
 
+    if (!map["stale"]) {
+      map["stale"] = DEFAULT_TAG_COLOR;
+    }
+
     return map;
   }, [board]);
 
@@ -56,7 +62,7 @@ export default function ViewBoardPage(): JSX.Element {
           <>
             <div>
               <Container fluid className="my-3">
-                <div className="border-bottom border-light pb-3 d-flex">
+                <div className="d-flex">
                   <div className="flex-fill">
                     <h1>{board.title}</h1>
                     <div className="text-muted mb-3">{board.description}</div>
@@ -123,10 +129,28 @@ export default function ViewBoardPage(): JSX.Element {
                           )
                           .map((card) => {
                             const sectionIndex = getSectionIndex(section.id);
+                            const tags = [
+                              ...new Set(
+                                [
+                                  ...(card.content.match(/#\w+/g) || [])
+                                    .map((str) => str.slice(1))
+                                    .filter((str) =>
+                                      board.labels.find(
+                                        (label) => label.key === str
+                                      )
+                                    ),
+                                  board.config.markStaleMinutes &&
+                                    dayjs().diff(card.timeCreated, "m") >=
+                                      board.config.markStaleMinutes &&
+                                    "stale",
+                                ].filter((v) => v)
+                              ),
+                            ].sort();
+
                             return (
                               <BoardCard
                                 key={card.id}
-                                className={classnames(style.Card, "mb-3 py-2")}
+                                className="mb-3"
                                 card={card}
                                 user={
                                   users?.find(
@@ -145,6 +169,7 @@ export default function ViewBoardPage(): JSX.Element {
                                     : true
                                 }
                                 labelColors={labelColorMap}
+                                tags={tags}
                                 onMove={(direction) => {
                                   const newSectionId =
                                     sections[

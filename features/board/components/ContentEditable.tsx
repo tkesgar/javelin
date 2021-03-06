@@ -16,23 +16,34 @@ export default function ContentEditable({
   const [text, setText] = React.useState(initialText);
   const divRef = React.useRef<HTMLDivElement>();
 
+  const processHTML = React.useCallback(
+    (text: string) => {
+      let result = text;
+
+      if (transformHTML) {
+        result = transformHTML(text);
+      }
+
+      return result;
+    },
+    [transformHTML]
+  );
+
   React.useEffect(() => {
     if (!divRef.current) {
       return;
     }
 
-    divRef.current.innerHTML = transformHTML
-      ? transformHTML(initialText)
-      : initialText;
-  }, [initialText, transformHTML]);
+    divRef.current.innerHTML = processHTML(initialText);
+  }, [initialText, processHTML]);
 
   React.useEffect(() => {
     if (!divRef.current) {
       return;
     }
 
-    divRef.current.innerHTML = transformHTML ? transformHTML(text) : text;
-  }, [text, transformHTML]);
+    divRef.current.innerHTML = processHTML(text);
+  }, [text, processHTML]);
 
   return (
     <div

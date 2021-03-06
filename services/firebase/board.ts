@@ -2,9 +2,12 @@ import firebase from "firebase/app";
 import { createDebug } from "@/utils/log";
 import * as React from "react";
 import { Auth, useAuth } from "./auth";
+import DOMPurify from "dompurify";
 
 const db = () => firebase.firestore();
 const debug = createDebug("firebase-board");
+
+export const DEFAULT_TAG_COLOR = "#949494";
 export interface Board {
   id: string;
   ownerId: string;
@@ -15,6 +18,7 @@ export interface Board {
     showCardCreator: boolean;
     showTimestamp: boolean;
     removeCardOnlyOwner: boolean;
+    markStaleMinutes: number;
   };
   labels: {
     key: string;
@@ -48,7 +52,12 @@ const DEFAULT_BOARD_CONFIG: Board["config"] = {
   showCardCreator: true,
   showTimestamp: true,
   removeCardOnlyOwner: false,
+  markStaleMinutes: 0,
 };
+
+const DEFAULT_BOARD_LABELS: Board["labels"] = [
+  { key: "stale", color: DEFAULT_TAG_COLOR },
+];
 
 function toBoard({
   data,
@@ -67,7 +76,7 @@ function toBoard({
       ...DEFAULT_BOARD_CONFIG,
       ...(data.config || {}),
     },
-    labels: data.labels || [],
+    labels: data.labels || [...DEFAULT_BOARD_LABELS],
   };
 }
 
@@ -150,12 +159,14 @@ export async function createBoard({
   sectionTitles,
   description = null,
   config = {},
+  labels = [...DEFAULT_BOARD_LABELS],
 }: {
   userId: string;
   title: Board["title"];
   sectionTitles: string[];
   description?: Board["description"];
   config?: Partial<Board["config"]>;
+  labels?: Board["labels"];
 }): Promise<string> {
   const batch = db().batch();
 
@@ -169,6 +180,7 @@ export async function createBoard({
       ...DEFAULT_BOARD_CONFIG,
       ...config,
     },
+    labels,
   });
 
   for (const [i, title] of sectionTitles.entries()) {
@@ -261,7 +273,11 @@ export async function updateCard({
     .collection("cards")
     .doc(cardId)
     .update({
-      ...pick({ content }),
+      ...pick({
+        content: DOMPurify.sanitize(content, {
+          ALLOWED_TAGS: [],
+        }),
+      }),
       timeUpdated: firebase.firestore.FieldValue.serverTimestamp(),
     });
   debug("updated card");
