@@ -1,4 +1,8 @@
-import { Board, updateBoard } from "@/services/firebase/board";
+import {
+  Board,
+  DEFAULT_TAG_COLOR,
+  updateBoard,
+} from "@/services/firebase/board";
 import * as React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import style from "./BoardSettingsModal.module.scss";
@@ -125,6 +129,10 @@ function BoardConfig({ board }: { board: Board }): JSX.Element {
     }).catch((error) => alert(error.message));
   }
 
+  const staleTagColor =
+    board.labels.find((label) => label.key === "stale")?.color ||
+    DEFAULT_TAG_COLOR;
+
   return (
     <>
       <Form.Group>
@@ -170,7 +178,11 @@ function BoardConfig({ board }: { board: Board }): JSX.Element {
           className="mb-2"
           label={
             <>
-              Mark old cards with <BoardTag hash>stale</BoardTag> tag
+              Mark old cards with{" "}
+              <BoardTag hash color={staleTagColor}>
+                stale
+              </BoardTag>{" "}
+              tag
             </>
           }
           checked={config.markStaleMinutes > 0}
