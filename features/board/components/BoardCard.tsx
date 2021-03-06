@@ -63,13 +63,15 @@ export default function BoardCard({
 
   return (
     <div className={classnames(style.Card, className, "py-2")} {...restProps}>
-      <div className="mx-2 mb-2">
-        {tags.map((tag) => (
-          <BoardTag key={tag} hash color={labelColors[tag]} className="mr-1">
-            {tag}
-          </BoardTag>
-        ))}
-      </div>
+      {tags.length > 0 ? (
+        <div className={classnames(style.CardHeader, "mx-2 pb-2 mb-2")}>
+          {tags.map((tag) => (
+            <BoardTag key={tag} hash color={labelColors[tag]} className="mr-1">
+              {tag}
+            </BoardTag>
+          ))}
+        </div>
+      ) : null}
       <div className="d-flex align-items-center mb-2">
         <Button
           type="button"
