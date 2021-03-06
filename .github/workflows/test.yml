@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - wisdom
   pull_request:
     branches:
-      - master
+      - wisdom
 
 jobs:
   test:
