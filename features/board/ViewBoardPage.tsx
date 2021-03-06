@@ -96,11 +96,11 @@ export default function ViewBoardPage(): JSX.Element {
                     <BoardTag
                       key={label.key}
                       hash
-                      color={label.color}
+                      color={labelFilter[label.key] && label.color}
                       className="mr-1 mb-1"
                       role="button"
                       style={{
-                        opacity: labelFilter[label.key] ? "1.0" : "0.5",
+                        opacity: labelFilter[label.key] ? "1.0" : "0.8",
                       }}
                       onClick={() => {
                         setLabelFilter((currentLabelFilter) => {
@@ -236,7 +236,10 @@ function BoardView({
                     ].filter((v) => v)
                   ).sort(),
                 ])
-                .filter(([, tags]) => tags.find((tag) => labelFilter[tag]))
+                .filter(
+                  ([, tags]) =>
+                    tags.length === 0 || tags.find((tag) => labelFilter[tag])
+                )
                 .map(([card, tags]) => {
                   return (
                     <BoardCard
