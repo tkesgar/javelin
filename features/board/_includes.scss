@@ -1,7 +1,6 @@
 @import "../../styles/includes";
 
 @mixin font-cursive() {
+  font-family: $font-family-cursive;
   font-size: 16px;
-  font-family: "Comic Neue", "Comic Sans", "Comic Sans MS", "Chalkboard",
-    "ChalkboardSE-Regular", "Marker Felt", "Purisa", "URW Chancery L", cursive;
 }
