@@ -12,6 +12,7 @@ import BoardTag, { colorizeLabels } from "./BoardTag";
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
   user?: User;
+  processTags?: boolean;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
   showCreator?: boolean;
@@ -27,6 +28,7 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
 export default function BoardCard({
   card,
   user,
+  processTags = false,
   canMoveLeft = false,
   canMoveRight = false,
   showCreator = false,
@@ -43,8 +45,14 @@ export default function BoardCard({
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const transformHTMLCallback = React.useCallback(
-    (text: string) => colorizeLabels(text, labelColors),
-    [labelColors]
+    (text: string) => {
+      if (!processTags) {
+        return text;
+      }
+
+      return colorizeLabels(text, labelColors);
+    },
+    [labelColors, processTags]
   );
 
   React.useEffect(() => {

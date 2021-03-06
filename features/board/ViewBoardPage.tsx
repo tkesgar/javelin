@@ -143,7 +143,11 @@ export default function ViewBoardPage(): JSX.Element {
                   "mx-auto my-3"
                 )}
               >
-                <BoardView board={board} labelFilter={labelFilter} />
+                <BoardView
+                  board={board}
+                  boardLabels={boardLabels}
+                  labelFilter={labelFilter}
+                />
               </div>
             </div>
           </>
@@ -167,9 +171,11 @@ export default function ViewBoardPage(): JSX.Element {
 
 function BoardView({
   board,
+  boardLabels,
   labelFilter,
 }: {
   board: Board;
+  boardLabels: Board["labels"];
   labelFilter: Record<string, boolean>;
 }): JSX.Element {
   const auth = useAuth();
@@ -178,8 +184,10 @@ function BoardView({
   const users = useBoardUsers(board.id);
 
   const labelColorMap = React.useMemo(() => {
-    return createLabelColorMap(board.labels);
-  }, [board]);
+    return createLabelColorMap(boardLabels);
+  }, [boardLabels]);
+
+  const processTags = boardLabels.length > 0;
 
   return (
     <Container fluid>
@@ -227,7 +235,7 @@ function BoardView({
                       ...(card.content.match(/#\w+/g) || [])
                         .map((str) => str.slice(1))
                         .filter((str) =>
-                          board.labels.find((label) => label.key === str)
+                          boardLabels.find((label) => label.key === str)
                         ),
                       board.config.markStaleMinutes &&
                         dayjs().diff(card.timeCreated, "m") >=
@@ -249,6 +257,7 @@ function BoardView({
                       user={
                         users?.find((user) => user.id === card.userId) || null
                       }
+                      processTags={processTags}
                       canMoveLeft={sectionIndex > 0}
                       canMoveRight={sectionIndex < sections.length - 1}
                       showCreator={board.config.showCardCreator}
@@ -313,10 +322,6 @@ function createLabelColorMap(labels: Board["labels"]) {
     }
 
     map[label.key] = label.color;
-  }
-
-  if (!map["stale"]) {
-    map["stale"] = DEFAULT_TAG_COLOR;
   }
 
   return map;
