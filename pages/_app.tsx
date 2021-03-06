@@ -49,7 +49,7 @@ export default function App({ Component, pageProps }: AppProps): JSX.Element {
         <title>javelin</title>
         <meta
           name="description"
-          content="javelin is an app where people can arrange notes in a number of columns."
+          content="javelin is an app to arrange notes in columns."
         />
       </Head>
       <AuthProvider>
