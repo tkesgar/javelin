@@ -125,8 +125,6 @@ function BoardConfig({ board }: { board: Board }): JSX.Element {
     }).catch((error) => alert(error.message));
   }
 
-  console.log(board.config);
-
   return (
     <>
       <Form.Group>
