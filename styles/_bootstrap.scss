@@ -41,3 +41,8 @@
 @import "~bootstrap/scss/print";
 
 @import "~bootswatch/dist/pulse/bootswatch";
+
+// Add backdrop-filter to modals
+.modal {
+  backdrop-filter: blur(4px);
+}

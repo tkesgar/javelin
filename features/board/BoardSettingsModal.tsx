@@ -6,7 +6,7 @@ import classnames from "classnames";
 import debounce from "lodash/debounce";
 import ContentEditable from "./components/ContentEditable";
 import RemoveButton from "./components/RemoveButton";
-import { BoardTag } from "./components/BoardTag";
+import BoardTag from "./components/BoardTag";
 
 const DEFAULT_MARK_STALE_MINUTES = 24 * 60;
 
@@ -41,7 +41,7 @@ export default function BoardSettingsModal({
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
+        <Button variant="primary" onClick={onHide}>
           Close
         </Button>
       </Modal.Footer>

@@ -10,11 +10,12 @@ type BoardTagProps = React.ComponentPropsWithRef<"span"> & {
   hash?: boolean;
 };
 
-export function BoardTag({
+export default function BoardTag({
   color,
   hash = false,
   children,
   className,
+  style: styleProp,
   ...restProps
 }: BoardTagProps): JSX.Element {
   return (
@@ -24,14 +25,15 @@ export function BoardTag({
         hash && style.PrependHash,
         className
       )}
-      style={
-        color
+      style={{
+        ...(color
           ? {
               backgroundColor: color,
               color: colorYIQ(color),
             }
-          : { border: `1px solid ${NO_COLOR_BORDER}` }
-      }
+          : { border: `1px solid ${NO_COLOR_BORDER}` }),
+        ...styleProp,
+      }}
       {...restProps}
     >
       {children}

@@ -40,3 +40,11 @@
   // https://css-tricks.com/almanac/properties/l/line-clamp/
   @include line-clamp(1);
 }
+
+.BoardHeader {
+  @include media-breakpoint-up(md) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}

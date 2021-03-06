@@ -7,7 +7,7 @@ import classnames from "classnames";
 import day from "dayjs";
 import ContentEditable from "./ContentEditable";
 import RemoveButton from "./RemoveButton";
-import { BoardTag, colorizeLabels } from "./BoardTag";
+import BoardTag, { colorizeLabels } from "./BoardTag";
 
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
