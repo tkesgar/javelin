@@ -257,6 +257,7 @@ function BoardView({
                       user={
                         users?.find((user) => user.id === card.userId) || null
                       }
+                      editable={Boolean(auth)}
                       processTags={processTags}
                       canMoveLeft={sectionIndex > 0}
                       canMoveRight={sectionIndex < sections.length - 1}

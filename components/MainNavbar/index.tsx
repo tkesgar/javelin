@@ -1,6 +1,6 @@
-import { signOut, useAuth } from "@/services/firebase/auth";
+import { signIn, signOut, useAuth } from "@/services/firebase/auth";
 import * as React from "react";
-import { Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Button, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import style from "./style.module.scss";
 import classnames from "classnames";
 import Link from "next/link";
@@ -9,7 +9,7 @@ export default function MainNavbar(): JSX.Element {
   const auth = useAuth();
 
   return (
-    <Navbar bg="primary" variant="dark" className="py-2">
+    <Navbar bg="primary" variant="dark" className="py-1">
       <style jsx>{`
         .WIP {
           background: var(--yellow);
@@ -24,13 +24,13 @@ export default function MainNavbar(): JSX.Element {
           vertical-align: top;
         }
       `}</style>
-      <Link href={auth ? "/home" : "/"} passHref>
+      <Link href="/" passHref>
         <Navbar.Brand>
           javelin<span className="WIP">WIP</span>
         </Navbar.Brand>
       </Link>
 
-      {auth ? (
+      {auth === false ? null : auth ? (
         <Nav className="ml-auto">
           <NavDropdown
             title={
@@ -58,7 +58,19 @@ export default function MainNavbar(): JSX.Element {
             </NavDropdown.Item>
           </NavDropdown>
         </Nav>
-      ) : null}
+      ) : (
+        <Button
+          type="button"
+          variant="outline-light"
+          className="ml-auto"
+          onClick={() => {
+            // TODO Handle error (user canceled sign in)
+            signIn();
+          }}
+        >
+          Log in
+        </Button>
+      )}
     </Navbar>
   );
 }

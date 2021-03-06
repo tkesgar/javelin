@@ -12,6 +12,7 @@ import BoardTag, { colorizeLabels } from "./BoardTag";
 type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
   card: Card;
   user?: User;
+  editable?: boolean;
   processTags?: boolean;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
@@ -28,6 +29,7 @@ type BoardCardProps = React.ComponentPropsWithRef<"div"> & {
 export default function BoardCard({
   card,
   user,
+  editable = false,
   processTags = false,
   canMoveLeft = false,
   canMoveRight = false,
@@ -72,7 +74,7 @@ export default function BoardCard({
   return (
     <div className={classnames(style.Card, className, "py-2")} {...restProps}>
       {tags.length > 0 ? (
-        <div className={classnames(style.CardHeader, "mx-2 pb-2 mb-2")}>
+        <div className="mx-2 mb-3">
           {tags.map((tag) => (
             <BoardTag key={tag} hash color={labelColors[tag]} className="mr-1">
               {tag}
@@ -87,23 +89,32 @@ export default function BoardCard({
           size="sm"
           className={classnames(
             "bg-transparent border-0 p-0 ml-1 mr-2",
-            !canMoveLeft && "invisible"
+            (!editable || !canMoveLeft) && "invisible"
           )}
           onClick={() => onMove("left")}
         >
           <ChevronLeft size="16" />
         </Button>
         <div className="flex-fill">
-          <ContentEditable
-            className={classnames(style.CardContent, "mb-2")}
-            initialText={card.content}
-            transformHTML={transformHTMLCallback}
-            onContentChange={(text) => {
-              if (onTextUpdate) {
-                onTextUpdate(text);
-              }
-            }}
-          />
+          {editable ? (
+            <ContentEditable
+              className={classnames(style.CardContent, "mb-2")}
+              initialText={card.content}
+              transformHTML={transformHTMLCallback}
+              onContentChange={(text) => {
+                if (onTextUpdate) {
+                  onTextUpdate(text);
+                }
+              }}
+            />
+          ) : (
+            <div
+              className={classnames(style.CardContent, "mb-2")}
+              dangerouslySetInnerHTML={{
+                __html: transformHTMLCallback(card.content),
+              }}
+            />
+          )}
         </div>
         <Button
           type="button"
@@ -111,7 +122,7 @@ export default function BoardCard({
           size="sm"
           className={classnames(
             "bg-transparent border-0 p-0 ml-2 mr-1",
-            !canMoveRight && "invisible"
+            (!editable || !canMoveRight) && "invisible"
           )}
           onClick={() => onMove("right")}
         >
