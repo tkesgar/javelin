@@ -1,0 +1,15 @@
+@import "../includes";
+
+.BoardTag {
+  @include font-cursive();
+  @include transition();
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  display: inline-block;
+  border-radius: 100rem;
+}
+
+.PrependHash::before {
+  content: "#";
+}

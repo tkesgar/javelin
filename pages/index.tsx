@@ -1,6 +1,6 @@
+import HomePage from "@/features/home/HomePage";
 import * as React from "react";
-import CreateBoardPage from "../components/CreateBoardPage";
 
 export default function Index(): JSX.Element {
-  return <CreateBoardPage />;
+  return <HomePage />;
 }

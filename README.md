@@ -1,28 +1,20 @@
 # javelin
 
-[![TypeScript](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
-[![ESLint](https://img.shields.io/badge/code%20style-ESLint-blueviolet)](https://eslint.org/)
-[![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io/)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/1c6baa2e-ef81-49df-8bd8-4af30a46d439/deploy-status)](https://app.netlify.com/sites/javelin-a87b9e98/deploys)
+[![ジャベリンかわいい](https://cdn.donmai.us/original/a5/35/__javelin_azur_lane_drawn_by_moupii_hitsuji_no_ki__a535453fe8057a3bb34797589317856f.png)](https://www.pixiv.net/en/artworks/73661871)
 
 > I've gotten closer to you now, Commander. Hehehe. But I'm gonna have to work
 > harder~
 
-javelin is a web app where people can arrange notes in a number of columns. I
-built this primarily to help with sprint retrospective in my office, but it may
-be useful for other activities as well.
+javelin is an app where people can arrange notes in a number of columns. It is
+built with [Next.js][next] and uses [Firebase][firebase] to store data.
 
-javelin is built with [Next.js][nextjs] and uses [Firebase][firebase] to store
-data. It can be deployed in serverless environments (e.g. Netlify).
-
-A public instance is available here: https://javelin.tkesgar.com
+A public instance is available here: https://javelin.vercel.app.
 
 ## Usage
 
 ### Requirements
 
-- [Node.js][nodejs] (javelin is developed under Node.js 12)
-- [npm][npm]
+- Node.js 14
 - A Firebase project to use (free tier is enough)
 
 ### Installation
@@ -35,28 +27,22 @@ cd javelin
 npm install
 ```
 
-Add a `firebase.config.json` containing the Firebase configuration. It can be
-obtained from the project settings page.
+Get the Firebase project configuration and add it in `.env` as
+`NEXT_PUBLIC_FIREBASE_CONFIG`. Otherwise it will uses the public javelin
+Firebase instance.
 
-```json
-{
-  "apiKey": "firebase-api-key",
-  "authDomain": "firebase-auth-domain.firebaseapp.com",
+```
+NEXT_PUBLIC_FIREBASE_CONFIG="{
+  "apiKey":"firebase-api-key","authDomain": "firebase-auth-domain.firebaseapp.com",
   "databaseURL": "https://firebase-database-url.firebaseio.com",
   "projectId": "firebase-project-id",
   "storageBucket": "firebase-storage-bucket.appspot.com",
   "messagingSenderId": "firebase-messaging-sender-id",
   "appId": "firebase-app-id"
-}
+}"
 ```
 
-> Alternatively, put the JSON string as `FIREBASE_CONFIG` environment variable.
-> This is intended for environments such as Netlify, where it is more convenient
-> to provide an environment variable.
-
 ### Development
-
-Start Next.js development server:
 
 ```bash
 npm run dev
@@ -64,15 +50,10 @@ npm run dev
 
 ### Deployment
 
-Build and export the page files:
-
 ```
 npm run build
-npm run export
+npm start
 ```
-
-The compiled files are available in `out` directory, which should be served using
-a HTTP server.
 
 ## Contributing
 
@@ -80,14 +61,10 @@ Feel free to submit [issues] and create [pull requests][pulls].
 
 ## License
 
-Licensed under [MIT License][license].
+Licensed under MIT License.
 
 <!-- prettier-ignore-start -->
 [firebase]: https://firebase.google.com/
 [issues]: https://github.com/tkesgar/javelin/issues
-[license]: https://github.com/tkesgar/javelin/blob/master/LICENSE
-[nextjs]: https://nextjs.org/docs/getting-started
-[nodejs]: https://nodejs.org/
-[npm]: https://www.npmjs.com/
 [pulls]: https://github.com/tkesgar/javelin/pulls
 <!-- prettier-ignore-end -->

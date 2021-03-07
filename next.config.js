@@ -1,6 +1,8 @@
 const childProcess = require("child_process");
-const withSharo = require("@tkesgar/sharo-next");
+const sharoNext = require("@tkesgar/sharo-next");
 const package = require("./package.json");
+
+const withSharo = sharoNext();
 
 function getCommitHash() {
   return childProcess.execSync("git rev-parse HEAD").toString().trim();

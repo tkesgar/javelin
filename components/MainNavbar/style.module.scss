@@ -1,0 +1,10 @@
+.Avatar {
+  width: 20px;
+  height: 20px;
+}
+
+// stylelint-disable-next-line selector-pseudo-class-no-unknown
+.UserMenu :global(.dropdown-toggle) {
+  display: flex;
+  align-items: center;
+}

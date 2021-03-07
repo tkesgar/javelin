@@ -1,0 +1,6 @@
+@import "../../styles/includes";
+
+@mixin font-cursive() {
+  font-family: $font-family-cursive;
+  font-size: 16px;
+}

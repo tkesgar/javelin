@@ -1,7 +1,17 @@
 import * as React from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";
-import "../styles/main.scss";
+import "@/styles/main.scss";
+import { AuthProvider } from "@/services/firebase/auth";
+import { initializeApp } from "@/services/firebase";
+import * as day from "dayjs";
+import RelativeTime from "dayjs/plugin/relativeTime";
+
+day.extend(RelativeTime);
+
+if (typeof window !== "undefined") {
+  initializeApp();
+}
 
 export default function App({ Component, pageProps }: AppProps): JSX.Element {
   return (
@@ -35,15 +45,16 @@ export default function App({ Component, pageProps }: AppProps): JSX.Element {
           sizes="16x16"
           href="/favicon-16x16.png"
         />
-        <link rel="manifest" href="/site.webmanifest" />
 
-        <title>javelin | Interactive Notes</title>
+        <title>javelin</title>
         <meta
           name="description"
-          content="javelin is a web app where people can arrange notes in a number of columns, useful for activities such as sprint retrospective."
+          content="javelin is an app to arrange notes in columns."
         />
       </Head>
-      <Component {...pageProps} />
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
     </>
   );
 }
